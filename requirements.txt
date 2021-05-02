@@ -1,4 +1,6 @@
 python_version>='3.8'
+aiohttp~=3.7.4
+lxml~=4.6.3
+sqlalchemy~=1.4.6
 pyside2~=5.13.2
 pyqt~=5.12.3
-sqlalchemy~=1.4.5
