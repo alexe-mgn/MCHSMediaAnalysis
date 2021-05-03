@@ -6,7 +6,7 @@ import calendar
 
 old_loc = locale.getlocale(locale.LC_TIME)
 locale.setlocale(locale.LC_TIME, 'ru')
-_month_pref = [e.lower()[:-1] for e in calendar.month_name]
+_month_pref = [e.lower()[:-1] for e in calendar.month_name[1:]]
 locale.setlocale(locale.LC_TIME, old_loc)
 
 
@@ -23,6 +23,6 @@ class Timezone(datetime.tzinfo):
 
 
 def month_to_int(name: str):
-    for n, i in enumerate(_month_pref):
+    for n, i in enumerate(_month_pref, 1):
         if name.lower().startswith(i):
             return n

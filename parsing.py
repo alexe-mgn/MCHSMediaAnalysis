@@ -2,6 +2,7 @@
 Classes for parsing HTML pages strings.
 """
 from typing import *
+import itertools as it
 
 import datetime
 
@@ -47,37 +48,40 @@ class MCHSPageParser:
         Parse news HTML element and return data dict.
         """
         item = {}
-        for k, v in [("id", self._parse_id),
+        for k, f in [("id", self._parse_id),
                      ("title", self._parse_title),
                      ("date", self._parse_date),
                      ("category", self._parse_category),
-                     ("category_id", self._parse_category_id),
                      ("image", self._parse_image)]:
-            item[k] = v(element)
+            if (v := f(element)) is not None:
+                item[k] = v
         return item
 
     def _parse_id(self, element: lxml.etree.Element) -> Optional[int]:
-        href = self.item_id_xpath(element)[0]
-        if href is not None:
-            return int(href.strip('/').split('/')[-1])
-        return None
+        if e := self.item_id_xpath(element):
+            return int(e[0].strip('/').split('/')[-1])
 
     def _parse_title(self, element: lxml.etree.Element) -> Optional[str]:
-        return self.item_title_xpath(element)[0]
+        if e := self.item_title_xpath(element):
+            return str(e[0])
 
     def _parse_date(self, element: lxml.etree.Element) -> Optional[datetime.datetime]:
-        date_text = self.item_date_xpath(element)[0]
-        time, date = date_text.strip().split(' • ')
-        return datetime.datetime(*map(int, date.split('.')[::-1]), *map(int, time.split(':')))
+        if e := self.item_date_xpath(element):
+            time, date = e[0].strip().split(' • ')
+            return datetime.datetime(*map(int, date.split('.')[::-1]), *map(int, time.split(':')))
 
-    def _parse_category(self, element: lxml.etree.Element) -> Optional[str]:
-        return self.item_category_xpath(element)[0]
-
-    def _parse_category_id(self, element: lxml.etree.Element) -> Optional[str]:
-        return self.item_category_id_xpath(element)[0].split('=')[-1]
+    def _parse_category(self, element: lxml.etree.Element) -> Optional[Dict[str, Optional[str]]]:
+        category = {}
+        if e := self.item_category_id_xpath(element):
+            category["name"] = e[0].split('=')[-1]
+        if e := self.item_category_xpath(element):
+            category["full_name"] = str(e[0])
+        if category:
+            return category
 
     def _parse_image(self, element: lxml.etree.Element) -> Optional[str]:
-        return self.item_image_xpath(element)[0]
+        if e := self.item_image_xpath(element):
+            return str(e[0])
 
 
 class MCHSNewsParser:
@@ -89,9 +93,10 @@ class MCHSNewsParser:
     id_xpath = lxml.etree.XPath("./script[not(@src)][1]/text()")
     title_xpath = lxml.etree.XPath(".//*[@itemprop='headline'][1]/text()")
     date_xpath = lxml.etree.XPath(".//div[contains(@class, 'header__date')][1]/text()")
-    text_xpath = lxml.etree.XPath(".//article[1]/*[position() > 1]/text()")
-    categories_xpath = lxml.etree.XPath(".//div[contains(@class, 'header__tags')][1]//a/text()")
-    category_ids_xpath = lxml.etree.XPath(".//div[contains(@class, 'header__tags')][1]//a/@href")
+    text_xpath = lxml.etree.XPath(".//article[1]/*[position() > 1]")
+    text_subxpath = lxml.etree.XPath(".//text()")
+    category_full_names_xpath = lxml.etree.XPath(".//div[contains(@class, 'header__tags')][1]//a/text()")
+    category_names_xpath = lxml.etree.XPath(".//div[contains(@class, 'header__tags')][1]//a/@href")
     tags_xpath = lxml.etree.XPath(".//div[contains(@class, 'article-footer')]//a/text()")
     tag_ids_xpath = lxml.etree.XPath(".//div[contains(@class, 'article-footer')]//a/@href")
     image_xpath = lxml.etree.XPath(".//article[1]//img[1]/@src")
@@ -108,55 +113,67 @@ class MCHSNewsParser:
         """
         data = {}
         base = self.base_xpath(self.tree)[0]
-        for k, v in [("id", self._parse_id),
+        for k, f in [("id", self._parse_id),
                      ("title", self._parse_title),
                      ("date", self._parse_date),
                      ("text", self._parse_text),
                      ("categories", self._parse_categories),
-                     ("category_ids", self._parse_category_ids),
                      ("tags", self._parse_tags),
-                     ("tag_ids", self._parse_tag_ids),
                      ("image", self._parse_image)]:
-            data[k] = v(base)
+            if (v := f(base)) is not None:
+                data[k] = v
         return data
 
     def _parse_id(self, element: lxml.etree.Element) -> Optional[int]:
-        return int(self.id_xpath(element)[0].split('(')[-1].split(')')[0].strip("'/").split('/')[-1])
+        if e := self.id_xpath(element):
+            return e[0].split('(')[-1].split(')')[0].strip("'/").split('/')[-1]
 
     def _parse_title(self, element: lxml.etree.Element) -> Optional[str]:
-        return self.title_xpath(element)[0]
+        if e := self.title_xpath(element):
+            return str(e[0])
 
     def _parse_date(self, element: lxml.etree.Element) -> Optional[datetime.datetime]:
-        date_text = self.date_xpath(element)[0]
-        time, date = date_text.strip().split(' • ')
-        time = datetime.time(*map(int, time.split(':')))
-        if date.count(' ') <= 1:
-            if date.lower() == "сегодня":
-                date = datetime.datetime.now(tz=Timezone(3))
+        if e := self.date_xpath(element):
+            time, date = e[0].strip().split(' • ')
+            time = datetime.time(*map(int, time.split(':')))
+            if date.count(' ') <= 1:
+                if date.lower() == "сегодня":
+                    date = datetime.datetime.now(tz=Timezone(3))
+                else:
+                    # raise ValueError(f'Could not get date from "{date}"')
+                    return None
             else:
-                raise ValueError(f'Could not get date from "{date}"')
-        else:
-            day, month, year = date.split()
-            day, month, year = int(day), month_to_int(month), int(year)
-            if month is None:
-                raise ValueError(f'Could not parse month name in "{date}"')
-            date = datetime.date(year, month, day)
-        return datetime.datetime.combine(date, time, tzinfo=Timezone(3))
+                day, month, year = date.split()
+                day, month, year = int(day), month_to_int(month), int(year)
+                if month is None:
+                    # raise ValueError(f'Could not parse month name in "{date}"')
+                    return None
+                date = datetime.date(year, month, day)
+            return datetime.datetime.combine(date, time, tzinfo=Timezone(3))
 
     def _parse_text(self, element: lxml.etree.Element) -> Optional[str]:
-        return '\n'.join(self.text_xpath(element))
+        return '\n'.join(map(''.join, map(self.text_subxpath, self.text_xpath(element))))
 
-    def _parse_categories(self, element: lxml.etree.Element) -> Optional[List[str]]:
-        return list(self.categories_xpath(element))
+    def _parse_categories(self, element: lxml.etree.Element) -> Optional[List[Dict[str, Optional[str]]]]:
+        categories = [dict(**name, **full_name)
+                      for name, full_name
+                      in it.zip_longest(({"name": e.strip('/').split('=')[-1]}
+                                         for e in self.category_names_xpath(element)),
+                                        ({"full_name": str(e)} for e in self.category_full_names_xpath(element)),
+                                        fillvalue={})]
+        if categories:
+            return categories
 
-    def _parse_category_ids(self, element: lxml.etree.Element) -> Optional[List[str]]:
-        return [e.strip('/').split('=')[-1] for e in self.category_ids_xpath(element)]
-
-    def _parse_tags(self, element: lxml.etree.Element) -> Optional[List[str]]:
-        return list(self.tags_xpath(element))
-
-    def _parse_tag_ids(self, element: lxml.etree.Element) -> Optional[List[int]]:
-        return [int(e.strip('/').split('/')[-1]) for e in self.tag_ids_xpath(element)]
+    def _parse_tags(self, element: lxml.etree.Element) -> Optional[List[Dict[str, Optional[str]]]]:
+        tags = [dict(**tag_id, **name)
+                for tag_id, name
+                in it.zip_longest(({"id": int(e.strip('/').split('/')[-1])}
+                                   for e in self.tag_ids_xpath(element)),
+                                  ({"name": str(e)} for e in self.tags_xpath(element)),
+                                  fillvalue={})]
+        if tags:
+            return tags
 
     def _parse_image(self, element: lxml.etree.Element) -> Optional[str]:
-        return self.image_xpath(element)[0]
+        if e := self.image_xpath(element):
+            return str(e[0])

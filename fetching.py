@@ -78,19 +78,3 @@ class MCHSPageEdgeFinder(MCHSFetcher):
                 i.cancel()
         if not self.edge_finder.found:
             self.test()
-
-
-class MCHSUpdater(MCHSFetcher):
-    """
-    Class that manages fetching, parsing, updating and processing news.
-    """
-
-    class PageRequestTask(MCHSFetcher.PageRequestTask):
-
-        async def response(self, resp: aiohttp.ClientResponse, **kwargs):
-            return await super().response(resp, **kwargs)
-
-    class NewsRequestTask(MCHSFetcher.NewsRequestTask):
-
-        async def response(self, resp: aiohttp.ClientResponse, **kwargs):
-            return await super().response(resp, **kwargs)
