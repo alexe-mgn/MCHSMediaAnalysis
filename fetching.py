@@ -1,8 +1,8 @@
 """
 Classes for retrieving data from site.
 """
-
 import asyncio
+import urllib.parse
 
 import aiohttp
 
@@ -16,33 +16,47 @@ class MCHSFetcher(RequestManager):
     """
     Class for retrieving mchsmedia data.
     """
+    base_url = "http://mchsmedia.ru/"
 
     # TaskClass = PageRequestTask
 
     class PageRequestTask(RequestManager.RequestTask):
         manager: "MCHSFetcher"
-        url_pattern = "http://www.mchsmedia.ru/news/%d/"
+        url_pattern = "news/{}/"
 
         def __init__(self, manager: "MCHSFetcher", page: int, *,
                      name: str = None, **kwargs) -> None:
-            super().__init__(manager, url=self.url_pattern % page, method="get",
+            super().__init__(manager, url=(manager.base_url + self.url_pattern).format(page), method="get",
                              name=name if name is not None else f"MCHS page {page} request", **kwargs)
             self.page = page
 
-    def request_page(self, page: int):
-        self.register_task(self.PageRequestTask(self, page))
+    def request_page(self, page: int, **kwargs):
+        self.register_task(self.PageRequestTask(self, page, **kwargs))
 
     class NewsRequestTask(RequestManager.RequestTask):
-        url_pattern = "http://www.mchsmedia.ru/news/item/%d/"
+        """
+        Sometimes news tend to appear under /focus/item/{}/ for uncertain time.
+        For such cases and more, optional url parameter is provided.
+        """
+        manager: "MCHSFetcher"
+        url_pattern = "news/item/{}/"
 
-        def __init__(self, manager: "MCHSFetcher", news_id: int, *,
+        def __init__(self, manager: "MCHSFetcher", news_id: int, url: str = None, *,
                      name: str = None, **kwargs) -> None:
-            super().__init__(manager, self.url_pattern % news_id, method="get",
+            """
+            :param url: Preferred over .url_pattern and also formatted with news_id as argument.
+            """
+            url = (url if url is not None else self.url_pattern).format(news_id)
+            super().__init__(manager,
+                             url=urllib.parse.urljoin(manager.base_url, url)
+                             if not urllib.parse.urlparse(url).netloc
+                             else url,
+                             method="get",
                              name=name if name is not None else f"MCHS news id {news_id} request", **kwargs)
             self.news_id = news_id
 
-    def request_news(self, news_id: int):
-        self.register_task(self.NewsRequestTask(self, news_id))
+    def request_news(self, news_id: int, **kwargs):
+        self.register_task(self.NewsRequestTask(self, news_id, **kwargs))
 
 
 class MCHSPageEdgeFinder(MCHSFetcher):
