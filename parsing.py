@@ -98,7 +98,7 @@ class MCHSNewsParser:
     id_xpath = lxml.etree.XPath("./script[not(@src)][1]/text()")
     title_xpath = lxml.etree.XPath(".//*[@itemprop='headline'][1]/text()")
     date_xpath = lxml.etree.XPath(".//div[contains(@class, 'header__date')][1]/text()")
-    text_xpath = lxml.etree.XPath(".//article[1]/*[position() > 1]")
+    text_xpath = lxml.etree.XPath(".//article[1]/*[not(contains(@class, 'img'))]")
     text_subxpath = lxml.etree.XPath(".//text()")
     category_full_names_xpath = lxml.etree.XPath(".//div[contains(@class, 'header__tags')][1]//a/text()")
     category_names_xpath = lxml.etree.XPath(".//div[contains(@class, 'header__tags')][1]//a/@href")
