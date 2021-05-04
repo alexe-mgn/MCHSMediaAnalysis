@@ -49,6 +49,7 @@ class MCHSPageParser:
         """
         item = {}
         for k, f in [("id", self._parse_id),
+                     ("link", self._parse_link),
                      ("title", self._parse_title),
                      ("date", self._parse_date),
                      ("category", self._parse_category),
@@ -60,6 +61,10 @@ class MCHSPageParser:
     def _parse_id(self, element: lxml.etree.Element) -> Optional[int]:
         if e := self.item_id_xpath(element):
             return int(e[0].strip('/').split('/')[-1])
+
+    def _parse_link(self, element: lxml.etree.Element) -> Optional[str]:
+        if e := self.item_id_xpath(element):
+            return str(e[0])
 
     def _parse_title(self, element: lxml.etree.Element) -> Optional[str]:
         if e := self.item_title_xpath(element):

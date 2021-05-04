@@ -44,6 +44,7 @@ class MCHSUpdater(MCHSFetcher):
             else:
                 # Await response HTML and parse
                 news = MCHSPageParser(await resp.text(encoding='utf8')).parse()
+                # print("Page", self.url, "requests", [e['id'] for e in news])
                 for i in news:
                     news_id = i['id']
                     # Check news update needed
@@ -55,7 +56,7 @@ class MCHSUpdater(MCHSFetcher):
                         upd = True
                     if upd:
                         # Update news task
-                        self.manager.update_news(news_id)
+                        self.manager.update_news(news_id, url=i.get("link", None))
 
     class NewsUpdateTask(MCHSFetcher.NewsRequestTask):
         manager: "MCHSUpdater"
@@ -95,12 +96,12 @@ class MCHSUpdater(MCHSFetcher):
                 session.add_all(
                     NewsTags(news=news, tag=tag, priority=n) for n, tag in enumerate(tags))
 
-    def update_page(self, page: int, overwrite: bool = False):
+    def update_page(self, page: int, overwrite: bool = False, **kwargs):
         """
         :param page: page index.
         :param overwrite: fetch and overwrite news even if they are already present in DB.
         """
-        self.register_task(self.PageUpdateTask(self, page, overwrite=overwrite))
+        self.register_task(self.PageUpdateTask(self, page, overwrite=overwrite, **kwargs))
 
-    def update_news(self, news_id: int):
-        self.register_task(self.NewsUpdateTask(self, news_id))
+    def update_news(self, news_id: int, **kwargs):
+        self.register_task(self.NewsUpdateTask(self, news_id, **kwargs))
