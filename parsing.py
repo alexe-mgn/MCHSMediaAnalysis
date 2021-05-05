@@ -9,7 +9,7 @@ import datetime
 import lxml.etree
 import lxml.html
 
-from date_utils import Timezone, month_to_int
+from .date_utils import Timezone, month_to_int
 
 __all__ = ["MCHSPageParser", "MCHSNewsParser"]
 

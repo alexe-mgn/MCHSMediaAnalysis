@@ -9,7 +9,7 @@ import asyncio
 
 import aiohttp
 
-from fetching import MCHSFetcher
+from .fetching import MCHSFetcher
 
 __all__ = ["AbstractEdgeFinder", "AbstractSteppingEdgeFinder", "DividingEdgeFinder", "SplittingEdgeFinder"]
 

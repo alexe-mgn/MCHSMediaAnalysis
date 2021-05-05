@@ -7,7 +7,7 @@ import urllib.parse
 
 import aiohttp
 
-from async_tasks import RequestManager
+from .async_tasks import RequestManager
 
 __all__ = ["MCHSFetcher"]
 

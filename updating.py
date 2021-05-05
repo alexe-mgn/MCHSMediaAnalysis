@@ -9,9 +9,9 @@ import sqlalchemy.orm
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import sessionmaker, scoped_session
 
-from fetching import MCHSFetcher
-from parsing import MCHSPageParser, MCHSNewsParser
-from db import *
+from .fetching import MCHSFetcher
+from .parsing import MCHSPageParser, MCHSNewsParser
+from .db import *
 
 __all__ = ["MCHSUpdater"]
 
