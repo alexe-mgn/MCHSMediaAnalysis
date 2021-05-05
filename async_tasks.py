@@ -24,6 +24,9 @@ class TaskManager:
     # AsyncTask = asyncio.Task
 
     class AsyncTask(asyncio.Task):
+        """
+        Asynchronous task class, closely tied to TaskManager for portable and universal two-way data API.
+        """
 
         def __init__(self, manager: "TaskManager", coro: Coroutine, *,
                      name: str = None):
@@ -40,6 +43,7 @@ class TaskManager:
     def register_task(self, task: AsyncTask):
         """
         Register task in class manager.
+        Should be called on every AsyncTask created, this way tasks are added to manager.
         """
         task.add_done_callback(self._task_finished)
         self._tasks.append(task)
@@ -99,7 +103,8 @@ class RequestManager(TaskManager):
     class RequestTask(TaskManager.AsyncTask):
         manager: "RequestManager"
 
-        def __init__(self, manager: "RequestManager", url: StrOrURL, method: str = "get", *,
+        def __init__(self, manager: "RequestManager",
+                     url: StrOrURL, method: str = "get", retry: int = 0, *,
                      name: Optional[str] = ..., **kwargs) -> None:
             """
             Save parameters and initialize request coroutine.
@@ -111,6 +116,7 @@ class RequestManager(TaskManager):
             """
             self.url = url
             self.method = method
+            self.retry = retry
             super().__init__(manager, self._request(**kwargs),
                              name=name if name is not None else f"Request {method}: {url}")
 
@@ -119,17 +125,45 @@ class RequestManager(TaskManager):
             Make a request using configured session and parameters.
             :param kwargs: pass to session request kwargs.
             """
-            async with self.manager.session.request(method=self.method, url=self.url, **kwargs) as resp:
-                await self.response(resp)
-                await self.manager.response(resp, task=self)
+            if (rs := self.manager.request_semaphore) is not None:
+                await rs.acquire()
+
+            tries = 0
+            error = None
+            while not tries or (error is not None and (tries <= self.retry)):
+                tries += 1
+                # if tries > 1:
+                #     print(f"RETRY {self.url}")
+                try:
+                    async with self.manager.session.request(method=self.method, url=self.url, **kwargs) as resp:
+                        await self.response(resp)
+                        await self.manager.response(resp, task=self)
+                except aiohttp.ServerDisconnectedError as exc:
+                    error = exc
+                else:
+                    error = None
+
+            if rs is not None:
+                rs.release()
+
+            if error is not None:
+                raise error
 
         async def response(self, resp: aiohttp.ClientResponse, **kwargs):
             """
             Callback coroutine called with request response from _request.
             """
 
-    def __init__(self, loop: asyncio.AbstractEventLoop = None, session: aiohttp.ClientSession = None):
+    def __init__(self,
+                 loop: asyncio.AbstractEventLoop = None,
+                 session: aiohttp.ClientSession = None,
+                 max_requests: int = None):
+        """
+        max...requests parameters are recommended to limit connections,
+        thus stabilizing request-response time and avoiding connection errors.
+        """
         super().__init__(loop)
+        self.request_semaphore = asyncio.BoundedSemaphore(max_requests) if max_requests is not None else None
         self._session = session
         self.loop.create_task(self.init(), name="Init")
 

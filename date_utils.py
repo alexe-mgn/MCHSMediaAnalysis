@@ -1,3 +1,6 @@
+"""
+Date utilities for site parser.
+"""
 from typing import *
 
 import locale
@@ -11,6 +14,9 @@ locale.setlocale(locale.LC_TIME, old_loc)
 
 
 class Timezone(datetime.tzinfo):
+    """
+    Timezone determined by utc offset.
+    """
 
     def __init__(self, utc_offset: int = 0):
         self._utc_offset = utc_offset
@@ -22,7 +28,10 @@ class Timezone(datetime.tzinfo):
         return datetime.timedelta()
 
 
-def month_to_int(name: str):
+def month_to_int(name: str) -> int:
+    """
+    Convert russian month name to int.
+    """
     for n, i in enumerate(_month_pref, 1):
         if name.lower().startswith(i):
             return n

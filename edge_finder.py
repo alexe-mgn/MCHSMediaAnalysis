@@ -5,6 +5,12 @@ EdgeFinder classes for fast 1d point search.
 from typing import *
 import abc
 
+import asyncio
+
+import aiohttp
+
+from fetching import MCHSFetcher
+
 __all__ = ["AbstractEdgeFinder", "AbstractSteppingEdgeFinder", "DividingEdgeFinder", "SplittingEdgeFinder"]
 
 
@@ -14,7 +20,7 @@ class AbstractEdgeFinder(abc.ABC):
     After initialization data should be provided to instance with .validate,
     supporting information whether index is "left" or "right".
     Instance provides priority indexes to be checked with .get_probe/.get_probes
-    On every validation recalculate is called.
+    On every validation .recalculate is called.
     Process is stopped and edge considered found when property .found == True
     """
 
@@ -75,7 +81,7 @@ class AbstractEdgeFinder(abc.ABC):
             if self.right is None or ind < self.right:
                 self.right = ind
         if self.left is not None and self.right is not None and self.left > self.right:
-            raise RuntimeError("Start index became greater than right.")
+            raise RuntimeError("Left index became greater than right.")
         self.recalculate()
 
     def check(self, ind: int) -> bool:
@@ -164,3 +170,42 @@ class SplittingEdgeFinder(AbstractSteppingEdgeFinder):
     def recalculate(self):
         if self.left is not None and self.right is not None:
             self.step = max(int((self.right - self.left) // self.probes), 1)
+
+
+class MCHSPageEdgeFinder(MCHSFetcher):
+    """
+    Class that uses edge finders to find last valid news page.
+    """
+
+    # TaskClass = MCHSPageEdgeRequest
+
+    class PageRequestTask(MCHSFetcher.PageRequestTask):
+        manager: "MCHSPageEdgeFinder"
+
+        async def response(self, resp: aiohttp.ClientResponse, **kwargs):
+            await super().response(resp, **kwargs)
+            await self.manager.validate(self.page, valid=resp.ok, resp=resp)
+
+    def __init__(self,
+                 loop: asyncio.AbstractEventLoop = None,
+                 session: aiohttp.ClientSession = None,
+                 edge_finder: AbstractEdgeFinder = None,
+                 max_page_requests: int = None, max_news_requests: int = None,
+                 max_requests: int = None):
+        super().__init__(loop, session, max_page_requests, max_news_requests, max_requests)
+        self.edge_finder = edge_finder if edge_finder is not None else DividingEdgeFinder(left=1, step=10000, coef=2)
+
+    def test(self):
+        requested = {i.page for i in self._tasks}
+        for i in self.edge_finder.get_probes():
+            if i not in requested:
+                self.request_page(i)
+
+    async def validate(self, page: int, valid: bool = False, resp: aiohttp.ClientResponse = None):
+        self.edge_finder.validate(page, valid)
+        left, right = self.edge_finder.edge
+        for i in self._tasks:
+            if isinstance(i, self.PageRequestTask) and not left <= i.page <= right:
+                i.cancel()
+        if not self.edge_finder.found:
+            self.test()
