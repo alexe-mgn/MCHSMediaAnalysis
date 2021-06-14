@@ -5,4 +5,4 @@ mysql-connector-python
 sqlalchemy~=1.4.12
 #spacy~=3.0.6
 pyside2~=5.13.2
-pyqt~=5.12.3
+pyqt5~=5.12.3
