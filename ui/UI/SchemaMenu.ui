@@ -41,7 +41,7 @@
       <attribute name="title">
        <string>Tables</string>
       </attribute>
-      <layout class="QVBoxLayout" name="layoutTables">
+      <layout class="QHBoxLayout" name="layoutTables">
        <property name="spacing">
         <number>0</number>
        </property>
@@ -58,80 +58,77 @@
         <number>0</number>
        </property>
        <item>
-        <widget class="QSplitter" name="splitterTables">
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
+        <widget class="QListWidget" name="listTables">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
          </property>
-         <widget class="QListWidget" name="listTables">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-         </widget>
-         <widget class="QWidget" name="groupTableButtons" native="true">
-          <layout class="QGridLayout" name="layoutTableButtons">
-           <item row="3" column="1">
-            <widget class="QToolButton" name="buttonDeleteAllTables">
-             <property name="text">
-              <string>Delete All</string>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="0">
-            <widget class="QToolButton" name="buttonRefreshTables">
-             <property name="text">
-              <string>Refresh</string>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="1">
-            <widget class="QToolButton" name="buttonDeleteTable">
-             <property name="text">
-              <string>Delete</string>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="0">
-            <widget class="QToolButton" name="buttonCreateAllTables">
-             <property name="toolTip">
-              <string>Create all MCHS Media tables</string>
-             </property>
-             <property name="text">
-              <string>Create All</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="0">
-            <widget class="QToolButton" name="buttonExportTable">
-             <property name="text">
-              <string>Export</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="1">
-            <widget class="QToolButton" name="buttonImportTable">
-             <property name="text">
-              <string>Import</string>
-             </property>
-            </widget>
-           </item>
-           <item row="4" column="0">
-            <spacer name="spacerTableButtons">
-             <property name="orientation">
-              <enum>Qt::Vertical</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>20</width>
-               <height>230</height>
-              </size>
-             </property>
-            </spacer>
-           </item>
-          </layout>
-         </widget>
+        </widget>
+       </item>
+       <item>
+        <widget class="QWidget" name="groupTableButtons" native="true">
+         <layout class="QGridLayout" name="layoutTableButtons">
+          <item row="3" column="1">
+           <widget class="QToolButton" name="buttonDeleteAllTables">
+            <property name="text">
+             <string>Delete All</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QToolButton" name="buttonRefreshTables">
+            <property name="text">
+             <string>Refresh</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QToolButton" name="buttonDeleteTable">
+            <property name="text">
+             <string>Delete</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <widget class="QToolButton" name="buttonCreateAllTables">
+            <property name="toolTip">
+             <string>Create all MCHS Media tables</string>
+            </property>
+            <property name="text">
+             <string>Create All</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QToolButton" name="buttonExportTable">
+            <property name="text">
+             <string>Export</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QToolButton" name="buttonImportTable">
+            <property name="text">
+             <string>Import</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="0">
+           <spacer name="spacerTableButtons">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>230</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
         </widget>
        </item>
       </layout>
