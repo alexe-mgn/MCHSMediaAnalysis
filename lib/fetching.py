@@ -33,27 +33,18 @@ class MCHSFetcher(RequestManager):
         url_pattern = "news/{}/"
         manager: "MCHSFetcher"
 
-        def __init__(self, manager: "MCHSFetcher",
-                     page: int, method: str = "get", retry: int = 0, *,
+        def __init__(self, manager: "MCHSFetcher", page: int, *,
+                     method: str = "get", retry: int = 0,
                      name: str = None, **kwargs) -> None:
-            super().__init__(manager,
-                             url=urllib.parse.urljoin(manager.base_url, self.url_pattern.format(page)),
-                             method=method,
-                             retry=retry,
+            super().__init__(manager, urllib.parse.urljoin(manager.base_url, self.url_pattern.format(page)),
+                             method=method, retry=retry,
                              name=name if name is not None else f"MCHS page {page} request", **kwargs)
             self.page = page
 
         async def _request(self, **kwargs):
             if (ps := self.manager.page_semaphore) is not None:
                 await ps.acquire()
-            # print(f"+page {self.page}")
-            # stamp = time.time()
-            # try:
             res = await super()._request(**kwargs)
-            # except Exception as error:
-            #     print(f"ERROR page {self.page} {time.time() - stamp} {error}")
-            # else:
-            #     print(f"-page {self.page} {time.time() - stamp}")
             if ps is not None:
                 ps.release()
             return res
@@ -69,33 +60,25 @@ class MCHSFetcher(RequestManager):
         manager: "MCHSFetcher"
         url_pattern = "news/item/{}/"
 
-        def __init__(self, manager: "MCHSFetcher",
-                     news_id: int, url: str = None, method: str = "get", retry: int = 0, *,
+        def __init__(self, manager: "MCHSFetcher", news_id: int, *,
+                     url: str = None, method: str = "get", retry: int = 0,
                      name: str = None, **kwargs) -> None:
             """
             :param url: Preferred over .url_pattern and also formatted with news_id as argument.
             """
             url = (url if url is not None else self.url_pattern).format(news_id)
             super().__init__(manager,
-                             url=urllib.parse.urljoin(manager.base_url, url)
+                             urllib.parse.urljoin(manager.base_url, url)
                              if not urllib.parse.urlparse(url).netloc
                              else url,
-                             method=method,
-                             retry=retry,
+                             method=method, retry=retry,
                              name=name if name is not None else f"MCHS news id {news_id} request", **kwargs)
             self.news_id = news_id
 
         async def _request(self, **kwargs):
             if (ns := self.manager.news_semaphore) is not None:
                 await ns.acquire()
-            # print(f"+news {self.news_id}")
-            # stamp = time.time()
-            # try:
             res = await super()._request(**kwargs)
-            # except Exception as error:
-            #     print(f"ERROR news {self.news_id} {time.time() - stamp} {error}")
-            # else:
-            #     print(f"-news {self.news_id} {time.time() - stamp}")
             if ns is not None:
                 ns.release()
             return res

@@ -3,8 +3,9 @@ Classes for managing asynchronous tasks,
 including RequestManager for concurrent requests.
 """
 
-import warnings
 from typing import *
+import warnings
+import sys
 
 import asyncio
 
@@ -28,10 +29,18 @@ class TaskManager:
         Asynchronous task class, closely tied to TaskManager for portable and universal two-way data API.
         """
 
+        async def _coro_wrapper(self, coro: Coroutine):
+            try:
+                await coro
+            except:
+                self.manager.task_failed(self)
+            else:
+                self.manager.task_successful(self)
+
         def __init__(self, manager: "TaskManager", coro: Coroutine, *,
                      name: str = None):
             self.manager = manager
-            super().__init__(coro, loop=self.manager.loop, name=name)
+            super().__init__(self._coro_wrapper(coro), loop=self.manager.loop, name=name)
 
     _tasks = List[AsyncTask]
 
@@ -80,9 +89,20 @@ class TaskManager:
         """
         self.loop.run_until_complete(self.finish_all())
 
+    def task_failed(self, task: AsyncTask, /):
+        """
+        Callback method, called from inside upper-level except block, wrapping all task coroutines.
+        """
+        print(task, sys.exc_info())
+
+    def task_successful(self, task: AsyncTask, /):
+        """
+        Callback method, called every time a task is finished without exceptions.
+        """
+
     def task_finished(self, task: AsyncTask, /):
         """
-        Callback method, called with itself as the only argument every time a task is finished.
+        Callback method, called every time a task is finished.
         """
 
     def all_finished(self):
@@ -103,8 +123,8 @@ class RequestManager(TaskManager):
     class RequestTask(TaskManager.AsyncTask):
         manager: "RequestManager"
 
-        def __init__(self, manager: "RequestManager",
-                     url: StrOrURL, method: str = "get", retry: int = 0, *,
+        def __init__(self, manager: "RequestManager", url: StrOrURL, *,
+                     method: str = "get", retry: int = 0,
                      name: Optional[str] = ..., **kwargs) -> None:
             """
             Save parameters and initialize request coroutine.
@@ -132,8 +152,6 @@ class RequestManager(TaskManager):
             error = None
             while not tries or (error is not None and (tries <= self.retry)):
                 tries += 1
-                # if tries > 1:
-                #     print(f"RETRY {self.url}")
                 try:
                     async with self.manager.session.request(method=self.method, url=self.url, **kwargs) as resp:
                         await self.response(resp)
@@ -187,7 +205,7 @@ class RequestManager(TaskManager):
         """
         Create url request task.
         """
-        self.register_task(self.RequestTask(self, url, method, **kwargs))
+        self.register_task(self.RequestTask(self, url, method=method, **kwargs))
 
     async def response(self, resp: aiohttp.ClientResponse, task: RequestTask = None, **kwargs):
         """

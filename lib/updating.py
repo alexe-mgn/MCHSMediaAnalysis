@@ -6,8 +6,9 @@ import asyncio
 
 import aiohttp
 import sqlalchemy.orm
-from sqlalchemy.engine import Engine
+from sqlalchemy.engine import Engine, URL
 from sqlalchemy.orm import sessionmaker, scoped_session
+from sqlalchemy import create_engine
 
 from .fetching import MCHSFetcher
 from .parsing import MCHSPageParser, MCHSNewsParser
@@ -22,41 +23,45 @@ class MCHSUpdater(MCHSFetcher):
     """
 
     def __init__(self,
-                 engine: Engine,
+                 db_url: URL,
                  loop: asyncio.AbstractEventLoop = None,
                  session: aiohttp.ClientSession = None,
                  max_page_requests: int = None, max_news_requests: int = None,
                  max_requests: int = None):
         super().__init__(loop, session, max_page_requests, max_news_requests, max_requests)
-        self.engine = engine
-        self.Session = scoped_session(sessionmaker(engine))
+        self.engine: Engine = create_engine(db_url)
+        self.Session = scoped_session(sessionmaker(self.engine))
 
     class PageUpdateTask(MCHSFetcher.PageRequestTask):
         manager: "MCHSUpdater"
 
-        def __init__(self, manager: "MCHSFetcher",
-                     page: int, method: str = "get", retry: int = 0,
-                     overwrite: bool = False, *,
+        def __init__(self, manager: "MCHSFetcher", page: int, *,
+                     method: str = "get", retry: int = 0,
+                     overwrite: bool = False,
                      name: str = None, **kwargs) -> None:
             """
             :param overwrite: fetch and overwrite news even if they are already present in DB.
             """
-            super().__init__(manager,
-                             page=page, method=method, retry=retry,
+            super().__init__(manager, page,
+                             method=method, retry=retry,
                              name=name if name is not None else f"MCHS page {page} update", **kwargs)
             self.overwrite = overwrite
+            self.news = []
 
         async def response(self, resp: aiohttp.ClientResponse, **kwargs):
             if not resp.ok:
                 raise RuntimeError(f"Page {self.page} request returned with status code {resp.status}.")
-            else:
-                # Await response HTML and parse
-                news = MCHSPageParser(await resp.text(encoding='utf8')).parse()
-                await self.update_news(news)
+            # Await response HTML and parse
+            self.news = await self._retreive_news(resp)
+            await self._update_news()
 
-        async def update_news(self, news: List[Dict[str, Any]]):
-            # print("Page", self.url, "requests", [e['id'] for e in news])
-            for i in news:
+        async def _retreive_news(self, resp: aiohttp.ClientResponse) -> List[Dict[str, Any]]:
+            if not (news := MCHSPageParser(await resp.text(encoding='utf8')).parse()):
+                raise RuntimeError(f"Page {self.page} request returned without news payload.")
+            return news
+
+        async def _update_news(self):
+            for i in self.news:
                 news_id: int = i['id']
                 # Check news update needed
                 with self.manager.Session() as session:
@@ -70,34 +75,56 @@ class MCHSUpdater(MCHSFetcher):
                     # Update news task
                     self.manager.update_news(news_id, url=i.get("link", None), retry=self.retry)
 
+    class PageUpdateWhileTask(PageUpdateTask):
+
+        def __init__(self, manager: "MCHSFetcher", page: int, test: Callable[[Dict[str, Any]], bool] = None, *,
+                     method: str = "get", retry: int = 0,
+                     overwrite: bool = False,
+                     name: str = None, **kwargs) -> None:
+            super().__init__(manager, page,
+                             method=method, retry=retry,
+                             overwrite=overwrite,
+                             name=name if name else f"MCHS page {page} update while", **kwargs)
+            self.test = test
+            self.kwargs = kwargs
+
+        async def response(self, resp: aiohttp.ClientResponse, **kwargs):
+            await super().response(resp, **kwargs)
+            if self.news:
+                self.manager.register_task(self.__class__(
+                    self.manager, self.page + 1, self.test,
+                    method=self.method, retry=self.retry, overwrite=self.overwrite, **self.kwargs
+                ))
+
+        async def _retreive_news(self, resp: aiohttp.ClientResponse) -> List[Dict[str, Any]]:
+            return list(filter(self.test, await super()._retreive_news(resp)))
+
     class NewsUpdateTask(MCHSFetcher.NewsRequestTask):
         manager: "MCHSUpdater"
 
-        def __init__(self, manager: "MCHSFetcher",
-                     news_id: int, url: str = None, method: str = "get", retry: int = 0, *,
+        def __init__(self, manager: "MCHSFetcher", news_id: int, *,
+                     url: str = None, method: str = "get", retry: int = 0,
                      name: str = None, **kwargs) -> None:
-            super().__init__(manager,
-                             news_id=news_id, url=url, method=method, retry=retry,
+            super().__init__(manager, news_id,
+                             url=url, method=method, retry=retry,
                              name=name if name is not None else f"MCHS news id {news_id} update", **kwargs)
+            self.news = {}
 
         async def response(self, resp: aiohttp.ClientResponse, **kwargs):
             if not resp.ok:
                 raise RuntimeError(f"News id {self.news_id} request returned with status code {resp.status}.")
-            await self.write_news(MCHSNewsParser(await resp.text(encoding='utf8')).parse())
+            self.news = MCHSNewsParser(await resp.text(encoding='utf8')).parse()
+            await self._write_news()
 
-        async def write_news(self, data: Dict[str, Any]):
+        async def _write_news(self):
             """
             Write data dict as news to database.
             """
+            data = self.news
             with self.manager.Session() as session, session.begin():
                 session: sqlalchemy.orm.Session
                 news = session.merge(News(
                     **{k: v for k, v in data.items() if k in {"id", "title", "date", "text", "image"}}))
-                # news = session.merge(News(id=data['id'],
-                #                           title=data.get('title', None),
-                #                           date=data.get('date', None),
-                #                           text=data.get('text', None),
-                #                           image=data.get('image', None)))
                 if "categories" in data.keys():
                     news.categories_assoc.clear()
                 if "tags" in data.keys():
@@ -121,3 +148,6 @@ class MCHSUpdater(MCHSFetcher):
 
     def update_news(self, news_id: int, **kwargs):
         self.register_task(self.NewsUpdateTask(self, news_id, **kwargs))
+
+    def update_while(self, test: Callable[[Dict[str, Any]], bool], overwrite: bool = False, **kwargs):
+        self.register_task(self.PageUpdateWhileTask(self, 1, test, overwrite=overwrite, **kwargs))
