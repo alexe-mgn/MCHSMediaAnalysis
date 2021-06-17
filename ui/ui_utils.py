@@ -11,8 +11,6 @@ from PyQt5 import uic
 
 from utils import PATH, FROZEN
 
-from lib.date_utils import Timezone
-
 LOAD_UI = False
 
 UI_CLASSES = ["ErrorDialog",

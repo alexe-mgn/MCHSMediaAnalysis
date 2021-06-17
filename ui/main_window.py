@@ -1,8 +1,13 @@
+from typing import *
+
 from sqlalchemy.engine import URL
 
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QCloseEvent
 from PyQt5.QtWidgets import QMainWindow, QTabBar
 
 from . import ui_utils
+from . import app_config
 
 if not ui_utils.LOAD_UI:
     from .UI.MainWindow import Ui_MainWindow
@@ -12,14 +17,22 @@ else:
 from .connect_menu import ConnectMenu
 from .admin_menu import AdminMenu
 
+if TYPE_CHECKING:
+    from .updater import Updater
+
 __all__ = ["MainWindow"]
 
 
 class MainWindow(Ui_MainWindow, QMainWindow):
 
-    def __init__(self):
+    def __init__(self, updater: "Updater"):
         super().__init__()
+        self.updater = updater
         self.setupUi(self)
+
+        self.setAttribute(Qt.WA_QuitOnClose, False)
+        self.setWindowTitle(app_config.APP_NAME)
+        self.setWindowIcon(app_config.ICON)
 
         self.tabWidget.tabCloseRequested.connect(self.tabWidget.removeTab)
 
@@ -40,3 +53,7 @@ class MainWindow(Ui_MainWindow, QMainWindow):
             raise ValueError(f"Invalid user role \"{role}\"")
         self.tabWidget.addTab(tab, tab.windowTitle())
         self.tabWidget.setCurrentWidget(tab)
+
+    def closeEvent(self, event: QCloseEvent):
+        event.ignore()
+        self.updater.close_analysis()

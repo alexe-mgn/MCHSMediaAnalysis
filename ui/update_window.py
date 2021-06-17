@@ -17,11 +17,31 @@ if TYPE_CHECKING:
 
 class UpdateWindow(Ui_UpdateWindow, QWidget):
 
-    def __init__(self, updater: Updater):
+    def __init__(self, updater: "Updater"):
         super().__init__()
         self.updater = updater
+
         self.setupUi(self)
 
-    @Slot
-    def news_requested(self):
-        ...
+    @Slot(int)
+    def news_requested(self, news_id: int):
+        v = self.valuePending
+        v.display(v.intValue() + 1)
+
+    @Slot(int)
+    def news_failed(self, news_id: int):
+        v = self.valueFailed
+        v.display(v.intValue() + 1)
+        p = self.valuePending
+        p.display(p.intValue() - 1)
+
+    @Slot(int)
+    def news_successful(self, news_id: int):
+        v = self.valueSuccessful
+        v.display(v.intValue() + 1)
+        p = self.valuePending
+        p.display(p.intValue() - 1)
+
+    # @Slot(int)
+    # def news_finished(self, news_id: int):
+    #     ...

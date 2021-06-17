@@ -19,11 +19,6 @@ if __name__ == "__main__":
 
     update_all_ui_once()
 
-    from ui.main_window import MainWindow
+    from ui import run_app
 
-    # run_app()
-    app = QApplication(sys.argv)
-    mw = MainWindow()
-    mw.connect_tab.role = "admin"
-    mw.show()
-    app.exec_()
+    run_app()
