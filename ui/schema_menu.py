@@ -1,6 +1,8 @@
 from typing import *
 import datetime
 
+from sqlalchemy.sql.expression import func
+import sqlalchemy.orm
 from sqlalchemy.engine import Engine, URL
 from sqlalchemy import create_engine, inspect, schema, MetaData
 
@@ -17,13 +19,17 @@ if not ui_utils.LOAD_UI:
 else:
     Ui_SchemaMenu = ui_utils.load_ui("SchemaMenu")
 
+if TYPE_CHECKING:
+    from .updater import Updater
+
 __all__ = ["SchemaMenu"]
 
 
 class SchemaMenu(Ui_SchemaMenu, QGroupBox):
 
-    def __init__(self, url: URL = None):
+    def __init__(self, updater: "Updater", url: URL = None):
         super().__init__()
+        self.updater = updater
         self.engine: Engine = create_engine(url) if url else None
         self.setupUi(self)
         self.tabWidget.setCurrentIndex(0)
@@ -59,6 +65,8 @@ class SchemaMenu(Ui_SchemaMenu, QGroupBox):
             datetime.datetime.now(MCHS_TZ) - datetime.timedelta(days=30)))
         self.checkUpdateToLast.stateChanged.emit(self.checkUpdateToLast.checkState())
         self.checkUpdateFromAny.stateChanged.emit(self.checkUpdateFromAny.checkState())
+
+        self.buttonUpdate.clicked.connect(self.update_now)
 
     @property
     def schema(self) -> str:
@@ -132,3 +140,16 @@ class SchemaMenu(Ui_SchemaMenu, QGroupBox):
         else:
             t.drop()
         self.refresh_tables()
+
+    def get_update_range(self) -> Tuple[datetime.datetime, datetime.datetime]:
+        return (self.valueUpdateDateA.dateTime().toPyDateTime() if not self.checkUpdateToLast.checkState() else None,
+                self.valueUpdateDateB.dateTime().toPyDateTime() if not self.checkUpdateFromAny.checkState() else None)
+
+    def update_now(self):
+        a, b = self.get_update_range()
+        if a is None:
+            with self.engine.connect() as con:
+                con: sqlalchemy.orm.Session
+                a = con.execute(func.max(db.News.date)).scalar()
+        self.updater.update(self.engine.url, b, a)
+        self.updater.open_status()

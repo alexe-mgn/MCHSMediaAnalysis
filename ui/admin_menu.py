@@ -15,20 +15,24 @@ else:
 
 from .schema_menu import SchemaMenu
 
+if TYPE_CHECKING:
+    from .updater import Updater
+
 __all__ = ["AdminMenu"]
 
 
 class AdminMenu(Ui_AdminMenu, QWidget):
 
-    def __init__(self, url: URL):
+    def __init__(self, updater: "Updater", url: URL):
         super().__init__()
+        self.updater = updater
         self._engine: Engine = create_engine(url)
         self.setupUi(self)
 
         self.postfix = self.windowTitle()
         self.setWindowTitle(f"{self._engine.url.username} - {self.postfix}")
 
-        self.schemaMenu = SchemaMenu(self._engine.url)
+        self.schemaMenu = SchemaMenu(self.updater, self._engine.url)
         self.containerSchemaMenu.layout().addWidget(self.schemaMenu)
 
         self.listSchemas.itemSelectionChanged.connect(

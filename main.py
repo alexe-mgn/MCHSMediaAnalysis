@@ -1,10 +1,11 @@
+# import traceback
 import sys
 
-import utils
 from ui.error_dialog import ErrorDialog
 
 
 def excepthook(exc_type, exc_value, exc_traceback):
+    # traceback.print_exception(exc_type, exc_value, exc_traceback)
     d = ErrorDialog(exc_type, exc_value, exc_traceback)
     d.setModal(True)
     d.exec_()
@@ -14,7 +15,6 @@ def excepthook(exc_type, exc_value, exc_traceback):
 sys.excepthook = excepthook
 
 if __name__ == "__main__":
-    from PyQt5.QtWidgets import QApplication
     from ui.ui_utils import update_all_ui_once
 
     update_all_ui_once()

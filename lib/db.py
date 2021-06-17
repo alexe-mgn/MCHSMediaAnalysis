@@ -168,9 +168,9 @@ class Category(Base):
 class NewsCategories(Base):
     __tablename__ = "news__categories"
 
-    news_id = Column(Integer, ForeignKey(News.id), primary_key=True)
+    news_id = Column(Integer, ForeignKey(News.id, ondelete="CASCADE"), primary_key=True)
     news = relationship(News, back_populates="categories_assoc")
-    category_name = Column(String(25), ForeignKey(Category.name), primary_key=True)
+    category_name = Column(String(25), ForeignKey(Category.name, ondelete="CASCADE"), primary_key=True)
     category = relationship(Category, back_populates="news_assoc")
     priority = Column(Integer)
 
@@ -196,9 +196,9 @@ class Tag(Base):
 class NewsTags(Base):
     __tablename__ = "news__tags"
 
-    news_id = Column(Integer, ForeignKey(News.id), primary_key=True)
+    news_id = Column(Integer, ForeignKey(News.id, ondelete="CASCADE"), primary_key=True)
     news = relationship(News, back_populates="tags_assoc")
-    tag_id = Column(Integer, ForeignKey(Tag.id), primary_key=True)
+    tag_id = Column(Integer, ForeignKey(Tag.id, ondelete="CASCADE"), primary_key=True)
     tag = relationship(Tag, back_populates="news_assoc")
     priority = Column(Integer)
 

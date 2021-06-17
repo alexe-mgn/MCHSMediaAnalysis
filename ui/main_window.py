@@ -46,7 +46,7 @@ class MainWindow(Ui_MainWindow, QMainWindow):
 
     def connect(self, url: URL, role: str):
         if role == 'admin':
-            tab = AdminMenu(url)
+            tab = AdminMenu(self.updater, url)
         elif role == 'user':
             tab = None
         else:

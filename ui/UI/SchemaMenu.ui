@@ -228,6 +228,9 @@
        </item>
        <item>
         <layout class="QHBoxLayout" name="layoutUpdateButtons">
+         <property name="sizeConstraint">
+          <enum>QLayout::SetFixedSize</enum>
+         </property>
          <item>
           <widget class="QToolButton" name="buttonUpdate">
            <property name="text">

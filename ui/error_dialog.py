@@ -2,6 +2,7 @@ from typing import *
 import sys
 import traceback
 
+from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QDialog
 
 from . import ui_utils
@@ -22,6 +23,8 @@ class ErrorDialog(Ui_ErrorDialog, QDialog):
                  exc_traceback=None):
         super().__init__()
         self.setupUi(self)
+
+        self.setAttribute(Qt.WA_QuitOnClose, False)
 
         self.buttonDetails.clicked.connect(lambda: self.toggle_details())
         self.dialogButtons.clicked.connect(self.reject)
