@@ -5,7 +5,7 @@ including RequestManager for concurrent requests.
 
 from typing import *
 import warnings
-import sys
+import traceback
 
 import asyncio
 
@@ -30,6 +30,7 @@ class TaskManager:
         """
 
         async def _coro_wrapper(self, coro: Coroutine):
+            self.manager.task_started(self)
             try:
                 await coro
             except:
@@ -89,11 +90,16 @@ class TaskManager:
         """
         self.loop.run_until_complete(self.finish_all())
 
+    def task_started(self, task: AsyncTask, /):
+        """
+        Callback method, called every time a task is finished without exceptions.
+        """
+
     def task_failed(self, task: AsyncTask, /):
         """
         Callback method, called from inside upper-level except block, wrapping all task coroutines.
         """
-        print(task, sys.exc_info())
+        traceback.print_exc()
 
     def task_successful(self, task: AsyncTask, /):
         """

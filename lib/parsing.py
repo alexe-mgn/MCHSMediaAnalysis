@@ -9,9 +9,12 @@ import datetime
 import lxml.etree
 import lxml.html
 
-from .date_utils import Timezone, month_to_int
+from .date_utils import MCHS_TZ, month_to_int
 
-__all__ = ["MCHSPageParser", "MCHSNewsParser"]
+__all__ = ["NEWS_DICT", "MCHSPageParser", "MCHSNewsParser"]
+
+NEWS_DICT = Dict[str, Any]
+NEWS_PAGE_DICT = Dict[str, Any]
 
 
 class MCHSPageParser:
@@ -33,7 +36,7 @@ class MCHSPageParser:
         """
         self.tree = lxml.html.fromstring(html_page, parser=parser)
 
-    def parse(self) -> List[Dict[str, Any]]:
+    def parse(self) -> List[NEWS_DICT]:
         """
         Fill .news with results of _parse_item on each element of base_xpath(tree)
         """
@@ -43,7 +46,7 @@ class MCHSPageParser:
             news.append(parse_item(item_el))
         return news
 
-    def _parse_item(self, element: lxml.etree.Element) -> Dict[str, Any]:
+    def _parse_item(self, element: lxml.etree.Element) -> NEWS_DICT:
         """
         Parse news HTML element and return data dict.
         """
@@ -112,7 +115,7 @@ class MCHSNewsParser:
         """
         self.tree = lxml.html.fromstring(html_page, parser=parser)
 
-    def parse(self) -> Dict[str, Any]:
+    def parse(self) -> NEWS_PAGE_DICT:
         """
         Parse page using functions on .base_xpath(.tree) and return data dict.
         """
@@ -143,7 +146,7 @@ class MCHSNewsParser:
             time = datetime.time(*map(int, time.split(':')))
             if date.count(' ') <= 1:
                 if date.lower() == "сегодня":
-                    date = datetime.datetime.now(tz=Timezone(3))
+                    date = datetime.datetime.now(tz=MCHS_TZ)
                 else:
                     # raise ValueError(f'Could not get date from "{date}"')
                     return None
@@ -154,7 +157,7 @@ class MCHSNewsParser:
                     # raise ValueError(f'Could not parse month name in "{date}"')
                     return None
                 date = datetime.date(year, month, day)
-            return datetime.datetime.combine(date, time, tzinfo=Timezone(3))
+            return datetime.datetime.combine(date, time, tzinfo=MCHS_TZ)
 
     def _parse_text(self, element: lxml.etree.Element) -> Optional[str]:
         return '\n'.join(map(''.join, map(self.text_subxpath, self.text_xpath(element))))

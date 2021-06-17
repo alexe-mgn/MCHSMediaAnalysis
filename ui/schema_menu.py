@@ -1,12 +1,14 @@
 from typing import *
+import datetime
 
 from sqlalchemy.engine import Engine, URL
 from sqlalchemy import create_engine, inspect, schema, MetaData
 
-from PyQt5.QtCore import Qt, QSignalBlocker
+from PyQt5.QtCore import Qt, QSignalBlocker, QDateTime, QTimeZone
 from PyQt5.QtWidgets import QGroupBox
 
 from lib import db
+from lib.date_utils import MCHS_TZ
 
 from . import ui_utils
 
@@ -24,7 +26,9 @@ class SchemaMenu(Ui_SchemaMenu, QGroupBox):
         super().__init__()
         self.engine: Engine = create_engine(url) if url else None
         self.setupUi(self)
+        self.tabWidget.setCurrentIndex(0)
 
+        # Tables
         self.listTables.itemSelectionChanged.connect(
             lambda: self.__class__.selected_table.__set__(
                 self,
@@ -36,6 +40,25 @@ class SchemaMenu(Ui_SchemaMenu, QGroupBox):
         self.buttonDeleteAllTables.clicked.connect(self.delete_tables)
 
         self.schema = self.schema
+
+        # Update
+        self.checkUpdateToLast.stateChanged.connect(lambda state: self.valueUpdateDateA.setEnabled(not state))
+        self.valueUpdateDateA.dateTimeChanged.connect(
+            lambda dt: self.valueUpdateDateB.setDateTime(max(self.valueUpdateDateB.dateTime(), dt)))
+
+        self.checkUpdateFromAny.stateChanged.connect(lambda state: self.valueUpdateDateB.setEnabled(not state))
+        self.checkUpdateFromAny.stateChanged.connect(lambda state: self.buttonSetDateNow.setEnabled(not state))
+        self.valueUpdateDateB.dateTimeChanged.connect(
+            lambda dt: self.valueUpdateDateA.setDateTime(min(self.valueUpdateDateA.dateTime(), dt)))
+        self.buttonSetDateNow.clicked.connect(
+            lambda: self.valueUpdateDateB.setDateTime(
+                ui_utils.QDateTime_fromPyDateTime(datetime.datetime.now(MCHS_TZ))
+            ))
+
+        self.valueUpdateDateA.setDateTime(ui_utils.QDateTime_fromPyDateTime(
+            datetime.datetime.now(MCHS_TZ) - datetime.timedelta(days=30)))
+        self.checkUpdateToLast.stateChanged.emit(self.checkUpdateToLast.checkState())
+        self.checkUpdateFromAny.stateChanged.emit(self.checkUpdateFromAny.checkState())
 
     @property
     def schema(self) -> str:

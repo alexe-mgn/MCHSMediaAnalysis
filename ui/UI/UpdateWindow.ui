@@ -20,42 +20,42 @@
       <enum>QLayout::SetFixedSize</enum>
      </property>
      <item row="0" column="0">
-      <widget class="QLabel" name="label">
+      <widget class="QLabel" name="labelSuccessful">
        <property name="text">
         <string>Successful:</string>
        </property>
       </widget>
      </item>
      <item row="1" column="0">
-      <widget class="QLabel" name="label_2">
+      <widget class="QLabel" name="labelFailed">
        <property name="text">
         <string>Failed:</string>
        </property>
       </widget>
      </item>
      <item row="2" column="0">
-      <widget class="QLabel" name="label_3">
+      <widget class="QLabel" name="labelPending">
        <property name="text">
         <string>Pending:</string>
        </property>
       </widget>
      </item>
      <item row="0" column="1">
-      <widget class="QLCDNumber" name="lcdNumber">
+      <widget class="QLCDNumber" name="valueSuccessful">
        <property name="digitCount">
         <number>7</number>
        </property>
       </widget>
      </item>
      <item row="1" column="1">
-      <widget class="QLCDNumber" name="lcdNumber_2">
+      <widget class="QLCDNumber" name="valueFailed">
        <property name="digitCount">
         <number>7</number>
        </property>
       </widget>
      </item>
      <item row="2" column="1">
-      <widget class="QLCDNumber" name="lcdNumber_3">
+      <widget class="QLCDNumber" name="valuePending">
        <property name="digitCount">
         <number>7</number>
        </property>
@@ -68,6 +68,32 @@
      <property name="sizeConstraint">
       <enum>QLayout::SetFixedSize</enum>
      </property>
+     <item row="0" column="0" colspan="3">
+      <widget class="QProgressBar" name="progressBar">
+       <property name="value">
+        <number>0</number>
+       </property>
+       <property name="textDirection">
+        <enum>QProgressBar::TopToBottom</enum>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="QLabel" name="labelCurrent">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="text">
+        <string>?</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+      </widget>
+     </item>
      <item row="1" column="2">
       <widget class="QLabel" name="labelB">
        <property name="sizePolicy">
@@ -97,29 +123,37 @@
        </property>
       </widget>
      </item>
-     <item row="1" column="1">
-      <widget class="QLabel" name="labelCurrent">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
+    </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="layoutButtons">
+     <property name="sizeConstraint">
+      <enum>QLayout::SetFixedSize</enum>
+     </property>
+     <item>
+      <widget class="QToolButton" name="buttonPause">
        <property name="text">
-        <string>?</string>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignCenter</set>
+        <string>Pause</string>
        </property>
       </widget>
      </item>
-     <item row="0" column="0" colspan="3">
-      <widget class="QProgressBar" name="progressBar">
-       <property name="value">
-        <number>24</number>
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
        </property>
-       <property name="textDirection">
-        <enum>QProgressBar::TopToBottom</enum>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QToolButton" name="buttonAbort">
+       <property name="text">
+        <string>Abort</string>
        </property>
       </widget>
      </item>

@@ -28,6 +28,9 @@ class Timezone(datetime.tzinfo):
         return datetime.timedelta()
 
 
+MCHS_TZ = Timezone(3)
+
+
 def month_to_int(name: str) -> int:
     """
     Convert russian month name to int.

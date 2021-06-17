@@ -1,20 +1,27 @@
 from typing import *
+import os
 
 import logging
+import datetime
 
+from PyQt5.QtCore import QDateTime, QTimeZone
 from PyQt5.QtGui import QGuiApplication
 from PyQt5.QtWidgets import QApplication, QWidget
 from PyQt5 import uic
 
 from utils import PATH, FROZEN
 
+from lib.date_utils import Timezone
+
 LOAD_UI = False
 
-UI_CLASSES = ["MainWindow", "ErrorDialog",
-              "ConnectMenu",
-              "AdminMenu", "SchemaMenu"]
+UI_CLASSES = ["ErrorDialog",
+              "UpdateWindow", "MainWindow",
+              "ConnectMenu", "AdminMenu", "SchemaMenu"]
 
 _UI_UPDATED = FROZEN
+
+ICON = os.path.join(PATH.UI, "favicon.ico")
 
 
 def get_ui(cls: str, py=False):
@@ -48,3 +55,9 @@ def test_ui(widget: Union[QWidget, Type[QWidget], Callable], *args, **kwargs):
     widget.show()
     if not app.startingUp():
         app.exec_()
+
+
+def QDateTime_fromPyDateTime(dt: datetime.datetime):
+    return QDateTime.fromSecsSinceEpoch(
+        dt.timestamp(),
+        QTimeZone(dt.tzinfo.utcoffset(None).seconds) if dt.tzinfo else None)
