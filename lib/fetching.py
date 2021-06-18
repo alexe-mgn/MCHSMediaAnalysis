@@ -23,9 +23,9 @@ class MCHSFetcher(RequestManager):
                  session: aiohttp.ClientSession = None,
                  max_page_requests: int = None, max_news_requests: int = None,
                  max_requests: int = None):
+        super().__init__(loop, session, max_requests)
         self.page_semaphore = asyncio.BoundedSemaphore(max_page_requests) if max_page_requests is not None else None
         self.news_semaphore = asyncio.BoundedSemaphore(max_news_requests) if max_news_requests is not None else None
-        super().__init__(loop, session, max_requests)
 
     # TaskClass = PageRequestTask
 

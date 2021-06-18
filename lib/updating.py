@@ -192,7 +192,7 @@ class MCHSUpdater(MCHSFetcher):
                 return True
 
         self.update_while(test, test_page,
-                          name=f"MCHS news range {', '.join('%s[%s; %s]' % (key, lower, upper))} update",
+                          name=f"MCHS news range {key}[{lower};{upper}] update",
                           **kwargs)
 
     # def update_ranges(self, keys: List[str],

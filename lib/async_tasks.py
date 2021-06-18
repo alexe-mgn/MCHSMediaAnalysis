@@ -46,8 +46,14 @@ class TaskManager:
     _tasks = List[AsyncTask]
 
     def __init__(self, loop: asyncio.AbstractEventLoop = None):
-        self.loop = asyncio.get_event_loop() if loop is None else loop
-        # self.loop.set_task_factory(self._task_factory)
+        if loop is None:
+            try:
+                self.loop = asyncio.get_event_loop()
+            except RuntimeError:
+                self.loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(self.loop)
+        else:
+            self.loop = loop
         self._tasks = []
 
     def register_task(self, task: AsyncTask):
