@@ -134,7 +134,7 @@ class MCHSNewsParser:
 
     def _parse_id(self, element: lxml.etree.Element) -> Optional[int]:
         if e := self.id_xpath(element):
-            return e[0].split('(')[-1].split(')')[0].strip("'/").split('/')[-1]
+            return int(e[0].split('(')[-1].split(')')[0].strip("'/").split('/')[-1])
 
     def _parse_title(self, element: lxml.etree.Element) -> Optional[str]:
         if e := self.title_xpath(element):
