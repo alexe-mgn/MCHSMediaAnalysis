@@ -22,8 +22,6 @@ class TaskManager:
     so loop should be provided or implicitly created during initialization.
     """
 
-    # AsyncTask = asyncio.Task
-
     class AsyncTask(asyncio.Task):
         """
         Asynchronous task class, closely tied to TaskManager for portable and universal two-way data API.
@@ -43,8 +41,6 @@ class TaskManager:
             self.manager = manager
             super().__init__(self._coro_wrapper(coro), loop=self.manager.loop, name=name)
 
-    _tasks = List[AsyncTask]
-
     def __init__(self, loop: asyncio.AbstractEventLoop = None):
         if loop is None:
             try:
@@ -54,7 +50,8 @@ class TaskManager:
                 asyncio.set_event_loop(self.loop)
         else:
             self.loop = loop
-        self._tasks = []
+        AsyncTask = self.AsyncTask
+        self._tasks: List[AsyncTask] = []
 
     def register_task(self, task: AsyncTask):
         """
@@ -95,6 +92,10 @@ class TaskManager:
         Blocking method to start tasks and wait until everything is completed.
         """
         self.loop.run_until_complete(self.finish_all())
+
+    def stop(self):
+        for task in self._tasks:
+            task.cancel()
 
     def task_started(self, task: AsyncTask, /):
         """
