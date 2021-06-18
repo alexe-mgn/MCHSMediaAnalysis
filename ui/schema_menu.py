@@ -20,7 +20,7 @@ else:
     Ui_SchemaMenu = ui_utils.load_ui("SchemaMenu")
 
 if TYPE_CHECKING:
-    from .updater import Updater
+    from .updater import UPDATE_RANGE, Updater
 
 __all__ = ["SchemaMenu"]
 
@@ -48,6 +48,8 @@ class SchemaMenu(Ui_SchemaMenu, QGroupBox):
         self.schema = self.schema
 
         # Update
+        self.valueUpdateDateA.setTimeSpec()
+
         self.checkUpdateToLast.stateChanged.connect(lambda state: self.valueUpdateDateA.setEnabled(not state))
         self.valueUpdateDateA.dateTimeChanged.connect(
             lambda dt: self.valueUpdateDateB.setDateTime(max(self.valueUpdateDateB.dateTime(), dt)))
@@ -142,8 +144,10 @@ class SchemaMenu(Ui_SchemaMenu, QGroupBox):
         self.refresh_tables()
 
     def get_update_range(self) -> Tuple[datetime.datetime, datetime.datetime]:
-        return (self.valueUpdateDateA.dateTime().toPyDateTime() if not self.checkUpdateToLast.checkState() else None,
-                self.valueUpdateDateB.dateTime().toPyDateTime() if not self.checkUpdateFromAny.checkState() else None)
+        return (self.valueUpdateDateA.dateTime().toPyDateTime().replace(tzinfo=MCHS_TZ) if
+                not self.checkUpdateToLast.checkState() else None,
+                self.valueUpdateDateB.dateTime().toPyDateTime().replace(tzinfo=MCHS_TZ) if
+                not self.checkUpdateFromAny.checkState() else None)
 
     def update_now(self):
         a, b = self.get_update_range()
@@ -151,5 +155,5 @@ class SchemaMenu(Ui_SchemaMenu, QGroupBox):
             with self.engine.connect() as con:
                 con: sqlalchemy.orm.Session
                 a = con.execute(func.max(db.News.date)).scalar()
-        self.updater.update(self.engine.url, b, a)
+        self.updater.start_update(self.engine.url, b, a)
         self.updater.open_status()
