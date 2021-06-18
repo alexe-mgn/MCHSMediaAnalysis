@@ -48,8 +48,6 @@ class SchemaMenu(Ui_SchemaMenu, QGroupBox):
         self.schema = self.schema
 
         # Update
-        self.valueUpdateDateA.setTimeSpec()
-
         self.checkUpdateToLast.stateChanged.connect(lambda state: self.valueUpdateDateA.setEnabled(not state))
         self.valueUpdateDateA.dateTimeChanged.connect(
             lambda dt: self.valueUpdateDateB.setDateTime(max(self.valueUpdateDateB.dateTime(), dt)))
