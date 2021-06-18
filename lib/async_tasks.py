@@ -6,6 +6,7 @@ including RequestManager for concurrent requests.
 from typing import *
 import warnings
 import traceback
+import sys
 
 import asyncio
 
@@ -32,7 +33,8 @@ class TaskManager:
             try:
                 await coro
             except:
-                self.manager.task_failed(self)
+                etype, evalue, etraceback = sys.exc_info()
+                self.manager.task_failed(self, etype, evalue, etraceback)
             else:
                 self.manager.task_successful(self)
 
@@ -102,11 +104,12 @@ class TaskManager:
         Callback method, called every time a task is finished without exceptions.
         """
 
-    def task_failed(self, task: AsyncTask, /):
+    def task_failed(self, task: AsyncTask, /,
+                    etype: Type[BaseException] = None, evalue: BaseException = None, etraceback=None):
         """
         Callback method, called from inside upper-level except block, wrapping all task coroutines.
         """
-        traceback.print_exc()
+        traceback.print_exception(etype, evalue, etraceback)
 
     def task_successful(self, task: AsyncTask, /):
         """
