@@ -76,7 +76,7 @@ class MCHSPageParser:
     def _parse_date(self, element: lxml.etree.Element) -> Optional[datetime.datetime]:
         if e := self.item_date_xpath(element):
             time, date = e[0].strip().split(' • ')
-            return datetime.datetime(*map(int, date.split('.')[::-1]), *map(int, time.split(':')))
+            return datetime.datetime(*map(int, date.split('.')[::-1]), *map(int, time.split(':')), tzinfo=MCHS_TZ)
 
     def _parse_category(self, element: lxml.etree.Element) -> Optional[Dict[str, Optional[str]]]:
         category = {}
