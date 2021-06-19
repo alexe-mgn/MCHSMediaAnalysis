@@ -173,6 +173,8 @@ class MCHSUpdater(MCHSFetcher):
 
         def test(news: NEWS_DICT):
             v = news[key]
+            if v.tzinfo is None:
+                print("ERROR")
             return (lower is None or lower <= v) and (upper is None or v <= upper)
 
         if not ascending and lower is not None:

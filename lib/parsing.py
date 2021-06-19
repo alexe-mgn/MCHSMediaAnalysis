@@ -143,7 +143,7 @@ class MCHSNewsParser:
     def _parse_date(self, element: lxml.etree.Element) -> Optional[datetime.datetime]:
         if e := self.date_xpath(element):
             time, date = e[0].strip().split(' • ')
-            time = datetime.time(*map(int, time.split(':')))
+            time = datetime.time(*map(int, time.split(':')), tzinfo=MCHS_TZ)
             if date.count(' ') <= 1:
                 if date.lower() == "сегодня":
                     date = datetime.datetime.now(tz=MCHS_TZ)
