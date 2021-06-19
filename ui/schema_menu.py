@@ -4,9 +4,9 @@ import datetime
 from sqlalchemy.sql.expression import func
 import sqlalchemy.orm
 from sqlalchemy.engine import Engine, URL
-from sqlalchemy import create_engine, inspect, schema, MetaData
+from sqlalchemy import create_engine, inspect, MetaData
 
-from PyQt5.QtCore import Qt, QSignalBlocker, QDateTime, QTimeZone
+from PyQt5.QtCore import Qt, QSignalBlocker
 from PyQt5.QtWidgets import QGroupBox
 
 from lib import db
@@ -153,5 +153,7 @@ class SchemaMenu(Ui_SchemaMenu, QGroupBox):
             with self.engine.connect() as con:
                 con: sqlalchemy.orm.Session
                 a = con.execute(func.max(db.News.date)).scalar()
+        if a is not None:
+            a = a.replace(tzinfo=MCHS_TZ)
         self.updater.start_update(self.engine.url, b, a)
         self.updater.open_status()
