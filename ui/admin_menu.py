@@ -89,6 +89,8 @@ class AdminMenu(Ui_AdminMenu, QWidget):
         if not self.listSchemas.findItems(name, Qt.MatchExactly):
             raise KeyError(f"No schema with name \"{name}\" found")
 
+        if name == self.open_schema:
+            self.open_schema = None
         with self._engine.begin() as con:
             con.execute(schema.DropSchema(name))
         self.refresh_schemas()
@@ -123,6 +125,8 @@ class AdminMenu(Ui_AdminMenu, QWidget):
         def __init__(self, menu: "AdminMenu"):
             super().__init__()
             self.menu = menu
+
+            self.setAttribute(Qt.WA_QuitOnClose, False)
 
             self.setLayout(QVBoxLayout())
 

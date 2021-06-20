@@ -14,6 +14,7 @@ from sqlalchemy import create_engine
 
 from .fetching import MCHSFetcher
 from .parsing import NEWS_DICT, MCHSPageParser, MCHSNewsParser
+from .processing import MCHSTextProcessor
 from .db import *
 
 __all__ = ["NEWS_TEST_F", "NEWS_LIST_TEST_F", "MCHSUpdater"]
@@ -129,9 +130,12 @@ class MCHSUpdater(MCHSFetcher):
         async def response(self, resp: aiohttp.ClientResponse, **kwargs):
             if not resp.ok:
                 raise RuntimeError(f"News id {self.news_id} request returned with status code {resp.status}.")
-            self.news = MCHSNewsParser(await resp.text(encoding='utf8')).parse()
-            if not self.news:
+            news = MCHSNewsParser(await resp.text(encoding='utf8')).parse()
+            self.news = news
+            if not news:
                 raise RuntimeError(f"News id {self.news_id} request returned without news data.")
+            if (text := news.get('text', None)) is not None:
+                news.update(MCHSTextProcessor(text).process())
             await self._write_news()
 
         async def _write_news(self):
@@ -141,13 +145,23 @@ class MCHSUpdater(MCHSFetcher):
             data = self.news
             with self.manager.Session() as session, session.begin():
                 session: sqlalchemy.orm.Session
-                news = session.merge(News(
-                    **{k: v for k, v in data.items() if k in {"id", "title", "date", "text", "image"}}))
+                NewsTyped = News
+                if (type_name := data.get("type", None)) is not None:
+                    news_type = session.merge(Type(name=type_name))
+                    NewsTyped = News.__mapper__.polymorphic_map[news_type.name].class_
+                cols = {k: v for k, v in data.items() if k in {
+                    "id", "title", "date", "text", "image", "region", "city", "injuries", "n_staff", "n_tech"
+                }}
+                for type_col in set(NewsTyped.__mapper__.columns) - set(News.__mapper__.columns):
+                    if (col_name := type_col.name) != "id" and (v := data.get(col_name, None)) is not None:
+                        cols[col_name] = v
+                news: News = session.merge(NewsTyped(**cols))
                 if "categories" in data.keys():
                     news.categories_assoc.clear()
                 if "tags" in data.keys():
                     news.tags_assoc.clear()
                 session.flush((news,))
+
                 # Filling categories and tags
                 categories = [session.merge(Category(**category)) for category in data.get("categories", ())]
                 tags = [session.merge(Tag(**tag)) for tag in data.get("tags", ())]

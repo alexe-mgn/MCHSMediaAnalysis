@@ -48,10 +48,6 @@ class News(Base):
                                     order_by="NewsCategories.priority",
                                     cascade="all, delete-orphan")
     categories = association_proxy("categories_assoc", "category", creator=lambda x: NewsCategories(category=x))
-    # categories = relationship("Category",
-    #                           secondary="news__categories",
-    #                           back_populates="news",
-    #                           order_by="NewsCategories.priority")
     category = relationship("Category",
                             primaryjoin="and_(NewsCategories.news_id == News.id, NewsCategories.priority == 0)",
                             secondary="news__categories",
@@ -62,10 +58,6 @@ class News(Base):
                               order_by="NewsTags.priority",
                               cascade="all, delete-orphan")
     tags = association_proxy("tags_assoc", "tag", creator=lambda x: NewsTags(tag=x))
-    # tags = relationship("Tag",
-    #                     secondary="news__tags",
-    #                     back_populates="news",
-    #                     order_by="NewsTags.priority")
 
     __mapper_args__ = {
         "polymorphic_on": "type_name",
@@ -130,14 +122,6 @@ class ExistingNews(Base):
                         primaryjoin=News.id == id,
                         uselist=False,
                         viewonly=True)
-
-
-# class ParsedNews(Base):
-#     __tablename__ = "__parsed_news"
-#     __table_args__ = {"comment": "Service table, news that were fetched and parsed, but not processed yet."}
-#
-#     id = Column(Integer, ForeignKey("news.id"), primary_key=True)
-#     news = relationship("News")
 
 
 class Type(Base):

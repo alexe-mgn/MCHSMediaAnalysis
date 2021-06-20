@@ -47,6 +47,8 @@ class TaskManager:
         if loop is None:
             try:
                 self.loop = asyncio.get_event_loop()
+                if self.loop.is_closed():
+                    raise RuntimeError("Current loop is closed.")
             except RuntimeError:
                 self.loop = asyncio.new_event_loop()
                 asyncio.set_event_loop(self.loop)

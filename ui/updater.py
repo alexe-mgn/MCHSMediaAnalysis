@@ -174,6 +174,7 @@ class Updater:
             QThreadPool.globalInstance().start(u)
 
     def _update_finished(self):
+        del self.update
         self.update = None
 
     def open_status(self):
