@@ -106,6 +106,7 @@ class Flood(News):
     __tablename__ = "news_flood"
 
     id = Column(Integer, ForeignKey(News.id), primary_key=True)
+    water = Column(String(50))
 
     __mapper_args__ = {"polymorphic_identity": "flood"}
 
