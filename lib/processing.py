@@ -109,10 +109,13 @@ class MCHSTextProcessor:
             elif label == 'area':
                 if (n := cls._process_count(entity)) is not None:
                     if 'кило' in entity.lemma_:
-                        n *= 10**6
+                        n *= 10 ** 6
                     elif 'га' in entity.lemma_ or 'гектар' in entity.lemma_:
-                        n *= 10**4
+                        n *= 10 ** 4
                     entities[label] = round(n)
-            elif label == 'LOC' and 'city' not in entities and 'region' not in entities and entity.lemma_ != 'россия':
+            elif label == 'LOC' and \
+                    'city' not in entities and \
+                    'region' not in entities and \
+                    len(entity) == 1 and entity.lemma_ != 'россия':
                 entities['city'] = entity.lemma_
         return entities
