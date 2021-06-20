@@ -6,6 +6,8 @@ import spacy
 
 from . import proc_config
 
+__all__ = ["NLP", "MCHSTextProcessor"]
+
 NLP = spacy.load("ru_core_news_sm")
 _pattern_matcher = spacy.matcher.Matcher(NLP.vocab)
 for key, ps in proc_config.PATTERNS.items():

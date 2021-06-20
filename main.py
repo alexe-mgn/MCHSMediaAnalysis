@@ -1,11 +1,9 @@
-# import traceback
 import sys
 
 from ui.error_dialog import ErrorDialog
 
 
 def excepthook(exc_type, exc_value, exc_traceback):
-    # traceback.print_exception(exc_type, exc_value, exc_traceback)
     d = ErrorDialog(exc_type, exc_value, exc_traceback)
     d.setModal(True)
     d.exec_()

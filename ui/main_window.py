@@ -16,6 +16,7 @@ else:
 
 from .connect_menu import ConnectMenu
 from .admin_menu import AdminMenu
+from .user_menu import UserMenu
 
 if TYPE_CHECKING:
     from .updater import Updater
@@ -48,7 +49,7 @@ class MainWindow(Ui_MainWindow, QMainWindow):
         if role == 'admin':
             tab = AdminMenu(self.updater, url)
         elif role == 'user':
-            tab = None
+            tab = UserMenu(url)
         else:
             raise ValueError(f"Invalid user role \"{role}\"")
         self.tabWidget.addTab(tab, tab.windowTitle())

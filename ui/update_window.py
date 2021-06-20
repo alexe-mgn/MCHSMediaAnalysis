@@ -17,6 +17,8 @@ else:
 if TYPE_CHECKING:
     from .updater import UPDATE_RANGE, Updater
 
+__all__ = ["UpdateWindow"]
+
 
 class UpdateWindow(Ui_UpdateWindow, QWidget):
 

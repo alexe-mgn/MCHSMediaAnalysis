@@ -1,5 +1,4 @@
 from typing import *
-import sys
 import datetime
 
 import asyncio
@@ -16,6 +15,9 @@ from lib import MCHSUpdater
 from . import app_config
 from .update_window import UpdateWindow
 from .main_window import MainWindow
+
+
+__all__ = ["UPDATE_RANGE", "Updater"]
 
 
 class QtMCHSUpdater(MCHSUpdater, QObject):

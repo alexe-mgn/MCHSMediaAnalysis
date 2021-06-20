@@ -1,3 +1,5 @@
+__all__ = ["KEYWORDS", "PATTERNS"]
+
 KEYWORDS = {
     "fire": {
         "пожар", "огонь", "пламя",

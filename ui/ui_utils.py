@@ -15,7 +15,9 @@ LOAD_UI = False
 
 UI_CLASSES = ["ErrorDialog",
               "UpdateWindow", "MainWindow",
-              "ConnectMenu", "AdminMenu", "SchemaMenu"]
+              "ConnectMenu",
+              "AdminMenu", "SchemaMenu",
+              "UserMenu"]
 
 _UI_UPDATED = FROZEN
 

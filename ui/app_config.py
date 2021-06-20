@@ -6,6 +6,8 @@ from . import ui_utils
 from PyQt5.QtGui import QGuiApplication, QIcon
 from PyQt5.QtWidgets import QApplication
 
+__all__ = ["APP_NAME", "APP", "ICON"]
+
 APP_NAME = "MCHS Media analysis"
 
 
