@@ -7,8 +7,7 @@ from sqlalchemy.event import listens_for
 from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.engine import Connection
-# from sqlalchemy.ext.automap import automap_base
-from sqlalchemy import MetaData, Table, Column, ForeignKey, Integer, String, Text, DateTime, inspect
+from sqlalchemy import MetaData, Table, Column, ForeignKey, Integer, String, Text, DateTime
 
 __all__ = ["Base",
            "News",

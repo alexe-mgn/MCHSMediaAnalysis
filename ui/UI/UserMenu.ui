@@ -6,13 +6,350 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
-    <height>300</height>
+    <width>761</width>
+    <height>568</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>user</string>
   </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <property name="spacing">
+    <number>0</number>
+   </property>
+   <property name="leftMargin">
+    <number>0</number>
+   </property>
+   <property name="topMargin">
+    <number>0</number>
+   </property>
+   <property name="rightMargin">
+    <number>0</number>
+   </property>
+   <property name="bottomMargin">
+    <number>0</number>
+   </property>
+   <item>
+    <widget class="QTabWidget" name="tabWidget">
+     <property name="currentIndex">
+      <number>0</number>
+     </property>
+     <property name="movable">
+      <bool>true</bool>
+     </property>
+     <widget class="QWidget" name="tabTables">
+      <attribute name="title">
+       <string>Tables</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="layoutTables">
+       <property name="spacing">
+        <number>0</number>
+       </property>
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
+       <item>
+        <widget class="QSplitter" name="splitterTables">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <widget class="QWidget" name="containerTableControls" native="true">
+          <layout class="QVBoxLayout" name="layoutTableControls">
+           <item>
+            <layout class="QHBoxLayout" name="layoutButtonRefreshNews">
+             <item>
+              <widget class="QPushButton" name="buttonRefreshNews">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="toolTip">
+                <string>Fetch news from database.</string>
+               </property>
+               <property name="text">
+                <string>Refresh news</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <layout class="QFormLayout" name="layoutTableSettings">
+             <item row="0" column="0">
+              <widget class="QLabel" name="labelTableSource">
+               <property name="text">
+                <string>Source table</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="QLabel" name="labelTableType">
+               <property name="text">
+                <string>Table type</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="0">
+              <widget class="QLabel" name="labelTableRows">
+               <property name="text">
+                <string>Rows</string>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="0">
+              <widget class="QLabel" name="labelTableColumns">
+               <property name="text">
+                <string>Columns</string>
+               </property>
+              </widget>
+             </item>
+             <item row="4" column="0">
+              <widget class="QLabel" name="labelTableValues">
+               <property name="text">
+                <string>Values</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QComboBox" name="valueTableSource"/>
+             </item>
+             <item row="1" column="1">
+              <widget class="QComboBox" name="valueTableType"/>
+             </item>
+             <item row="2" column="1">
+              <widget class="QComboBox" name="valueTableRows"/>
+             </item>
+             <item row="3" column="1">
+              <widget class="QComboBox" name="valueTableColumns"/>
+             </item>
+             <item row="4" column="1">
+              <widget class="QComboBox" name="valueTableValues"/>
+             </item>
+             <item row="5" column="0">
+              <widget class="QLabel" name="labelTableName">
+               <property name="text">
+                <string>Name</string>
+               </property>
+              </widget>
+             </item>
+             <item row="5" column="1">
+              <widget class="QLineEdit" name="valueTableName"/>
+             </item>
+             <item row="6" column="1">
+              <widget class="QToolButton" name="buttonTable">
+               <property name="text">
+                <string>Create table</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <spacer name="verticalSpacerTable">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>40</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout">
+             <item>
+              <widget class="QPushButton" name="buttonTableExport">
+               <property name="toolTip">
+                <string>Export viewed table.</string>
+               </property>
+               <property name="text">
+                <string>Export</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+          </layout>
+         </widget>
+         <widget class="QTabWidget" name="tabWidgetTables">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+            <horstretch>1</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+         </widget>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tabPlots">
+      <attribute name="title">
+       <string>Plots</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="layoutPlots">
+       <property name="spacing">
+        <number>0</number>
+       </property>
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
+       <item>
+        <widget class="QSplitter" name="splitterPlots">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <widget class="QWidget" name="containerPlotControls" native="true">
+          <layout class="QVBoxLayout" name="layoutPlotControls" stretch="0,0,0">
+           <item>
+            <layout class="QFormLayout" name="layoutPlotSettings">
+             <item row="0" column="0">
+              <widget class="QLabel" name="labelPlotTable">
+               <property name="text">
+                <string>Table</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QComboBox" name="valuePlotTable"/>
+             </item>
+             <item row="1" column="0">
+              <widget class="QLabel" name="labelPlotType">
+               <property name="text">
+                <string>Plot type</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1">
+              <widget class="QComboBox" name="valuePlotType"/>
+             </item>
+             <item row="2" column="0">
+              <widget class="QLabel" name="labelPlotX">
+               <property name="text">
+                <string>X</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="1">
+              <widget class="QComboBox" name="valuePlotX"/>
+             </item>
+             <item row="3" column="0">
+              <widget class="QLabel" name="labelPlotY">
+               <property name="text">
+                <string>Y</string>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="1">
+              <widget class="QComboBox" name="valuePlotY"/>
+             </item>
+             <item row="4" column="0">
+              <widget class="QLabel" name="labelPlotColor">
+               <property name="text">
+                <string>color</string>
+               </property>
+              </widget>
+             </item>
+             <item row="4" column="1">
+              <widget class="QComboBox" name="valuePlotColor"/>
+             </item>
+             <item row="5" column="0">
+              <widget class="QLabel" name="labelPlotName">
+               <property name="text">
+                <string>Name (opt.)</string>
+               </property>
+              </widget>
+             </item>
+             <item row="5" column="1">
+              <widget class="QLineEdit" name="valuePlotName"/>
+             </item>
+             <item row="6" column="1">
+              <widget class="QToolButton" name="buttonPlot">
+               <property name="text">
+                <string>Create plot</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <spacer name="verticalSpacerPlots">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>40</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="layoutButtonExport">
+             <item>
+              <widget class="QPushButton" name="buttonPlotExport">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="toolTip">
+                <string>Export viewed plot.</string>
+               </property>
+               <property name="text">
+                <string>Export</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+          </layout>
+         </widget>
+         <widget class="QTabWidget" name="tabWidgetPlot">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+            <horstretch>1</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="tabsClosable">
+           <bool>true</bool>
+          </property>
+          <property name="movable">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+  </layout>
  </widget>
  <resources/>
  <connections/>
