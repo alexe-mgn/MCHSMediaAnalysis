@@ -4,10 +4,10 @@ from ui.error_dialog import ErrorDialog
 
 
 def excepthook(exc_type, exc_value, exc_traceback):
+    sys.__excepthook__(exc_type, exc_value, exc_traceback)
     d = ErrorDialog(exc_type, exc_value, exc_traceback)
     d.setModal(True)
     d.exec_()
-    sys.__excepthook__(exc_type, exc_value, exc_traceback)
 
 
 sys.excepthook = excepthook

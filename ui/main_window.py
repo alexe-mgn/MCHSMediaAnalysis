@@ -3,7 +3,7 @@ from typing import *
 from sqlalchemy.engine import URL
 
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QCloseEvent
+from PyQt5.QtGui import QCloseEvent, QIcon
 from PyQt5.QtWidgets import QMainWindow, QTabBar
 
 from . import ui_utils
@@ -33,7 +33,7 @@ class MainWindow(Ui_MainWindow, QMainWindow):
 
         self.setAttribute(Qt.WA_QuitOnClose, False)
         self.setWindowTitle(app_config.APP_NAME)
-        self.setWindowIcon(app_config.ICON)
+        self.setWindowIcon(QIcon(app_config.ICON))
 
         self.tabWidget.tabCloseRequested.connect(self.tabWidget.removeTab)
 

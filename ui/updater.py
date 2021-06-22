@@ -6,7 +6,7 @@ import asyncio
 import aiohttp
 from PyQt5.QtCore import QObject, QRunnable, QThreadPool
 from PyQt5.QtCore import pyqtSignal as Signal
-from PyQt5.QtGui import QGuiApplication
+from PyQt5.QtGui import QGuiApplication, QIcon
 from PyQt5.QtWidgets import QAction, QMenu, QSystemTrayIcon
 from sqlalchemy.engine import URL
 
@@ -144,7 +144,7 @@ class TrayMenu(QMenu):
 class TrayIcon(QSystemTrayIcon):
 
     def __init__(self, updater: "Updater"):
-        super().__init__(app_config.ICON)
+        super().__init__(QIcon(app_config.ICON))
         self.updater = updater
         self.setContextMenu(TrayMenu(self.updater))
 

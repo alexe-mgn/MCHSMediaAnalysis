@@ -6,7 +6,7 @@ from . import ui_utils
 from PyQt5.QtGui import QGuiApplication, QIcon
 from PyQt5.QtWidgets import QApplication
 
-__all__ = ["APP_NAME", "APP", "ICON"]
+__all__ = ["APP_NAME", "get_app", "ICON"]
 
 APP_NAME = "MCHS Media analysis"
 
@@ -18,13 +18,16 @@ class App(QApplication):
         self.setApplicationName(APP_NAME)
 
 
-if not (APP := QGuiApplication.instance()):
-    APP = App([])
+def get_app():
+    if not (app := QGuiApplication.instance()):
+        app = App([])
+    return app
 
-APP_NAME = APP.tr(APP_NAME)
+
+# APP_NAME = APP.tr(APP_NAME)
 
 if not os.path.isfile(ui_utils.ICON):
     logging.getLogger("UI").error(f"UI icon not found ({ui_utils.ICON})")
     ICON = None
 else:
-    ICON = QIcon(ui_utils.ICON)
+    ICON = ui_utils.ICON
