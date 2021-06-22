@@ -57,7 +57,7 @@ def test_ui(widget: Union[QWidget, Type[QWidget], Callable], *args, **kwargs):
         app.exec_()
 
 
-def QDateTime_fromPyDateTime(dt: datetime.datetime):
+def qdatetime_frompydatetime(dt: datetime.datetime):
     return QDateTime.fromSecsSinceEpoch(
         dt.timestamp(),
         QTimeZone(dt.tzinfo.utcoffset(None).seconds) if dt.tzinfo else None)

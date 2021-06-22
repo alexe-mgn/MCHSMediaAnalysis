@@ -32,7 +32,7 @@ class TaskManager:
             self.manager.task_started(self)
             try:
                 await coro
-            except:
+            except BaseException:
                 etype, evalue, etraceback = sys.exc_info()
                 self.manager.task_failed(self, etype, evalue, etraceback)
             else:

@@ -28,7 +28,9 @@ def read_dataframe(url: URL, limit: int = None):
         ).groupby('news_id')['name'].apply(list)
         news = pd.merge(
             news, news_tags, how='left', left_on='id', right_on='news_id', copy=False
-        ).rename(columns={"name": "tags", "type_name": "type"})
+        )
+        news.rename(columns={"name": "tags", "type_name": "type"}, inplace=True)
+
         for subt in db.News.__subclasses__():
             right = pd.read_sql(
                 s.query(subt).with_entities(
@@ -36,5 +38,10 @@ def read_dataframe(url: URL, limit: int = None):
                 ).filter(subt.id.in_(news['id'])).statement,
                 s.connection())
             news = pd.merge(news, right, how='left', left_on='id', right_on='id', copy=False)
-    news.set_index('id', inplace=True)
-    return news
+        # Postprocess
+        water_null = news['water_x'].isnull()
+        news.loc[water_null, ['water_x']] = news['water_y']
+        news.drop(columns='water_y', inplace=True)
+        news.rename(columns={"water_x": "water"}, inplace=True)
+    # news.set_index('id', inplace=True)
+    return news.convert_dtypes()
