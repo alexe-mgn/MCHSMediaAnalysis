@@ -58,10 +58,10 @@ class SchemaMenu(Ui_SchemaMenu, QGroupBox):
             lambda dt: self.valueUpdateDateA.setDateTime(min(self.valueUpdateDateA.dateTime(), dt)))
         self.buttonSetDateNow.clicked.connect(
             lambda: self.valueUpdateDateB.setDateTime(
-                ui_utils.QDateTime_fromPyDateTime(datetime.datetime.now(MCHS_TZ))
+                ui_utils.qdatetime_frompydatetime(datetime.datetime.now(MCHS_TZ))
             ))
 
-        self.valueUpdateDateA.setDateTime(ui_utils.QDateTime_fromPyDateTime(
+        self.valueUpdateDateA.setDateTime(ui_utils.qdatetime_frompydatetime(
             datetime.datetime.now(MCHS_TZ) - datetime.timedelta(days=30)))
         self.checkUpdateToLast.stateChanged.emit(self.checkUpdateToLast.checkState())
         self.checkUpdateFromAny.stateChanged.emit(self.checkUpdateFromAny.checkState())
