@@ -90,7 +90,7 @@ class ConnectMenu(Ui_ConnectMenu, QWidget):
             with create_engine(url).connect():
                 pass
             self.main.connect(url, self.role)
-        except:
+        except BaseException:
             raise_exc_dialog()
         else:
             self.valueUser.clear()

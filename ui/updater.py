@@ -12,7 +12,7 @@ from sqlalchemy.engine import URL
 
 from lib import MCHSUpdater
 
-from . import app_config
+from . import ui_utils
 from .update_window import UpdateWindow
 from .main_window import MainWindow
 
@@ -144,7 +144,7 @@ class TrayMenu(QMenu):
 class TrayIcon(QSystemTrayIcon):
 
     def __init__(self, updater: "Updater"):
-        super().__init__(QIcon(app_config.ICON))
+        super().__init__(QIcon(ui_utils.ICON_PATH))
         self.updater = updater
         self.setContextMenu(TrayMenu(self.updater))
 

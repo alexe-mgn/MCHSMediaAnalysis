@@ -33,7 +33,7 @@ class MainWindow(Ui_MainWindow, QMainWindow):
 
         self.setAttribute(Qt.WA_QuitOnClose, False)
         self.setWindowTitle(app_config.APP_NAME)
-        self.setWindowIcon(QIcon(app_config.ICON))
+        self.setWindowIcon(QIcon(ui_utils.ICON_PATH))
 
         self.tabWidget.tabCloseRequested.connect(self.tabWidget.removeTab)
 
