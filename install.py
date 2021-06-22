@@ -1,6 +1,7 @@
 import traceback
-import subprocess
+import os
 import sys
+import subprocess
 
 import utils
 
@@ -10,7 +11,7 @@ def install():
     import spacy.cli
     spacy.cli.download("ru_core_news_sm")
     import plotly.offline
-    with open("plotly.min.js", mode='w') as f:
+    with open(os.path.join(utils.PATH.PLOTLY_JS), mode='w') as f:
         f.write(plotly.offline.get_plotlyjs())
 
 

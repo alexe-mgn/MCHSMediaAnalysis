@@ -10,9 +10,10 @@ from PyQt5.QtGui import QGuiApplication, QIcon
 from PyQt5.QtWidgets import QAction, QMenu, QSystemTrayIcon
 from sqlalchemy.engine import URL
 
+import utils
+
 from lib import MCHSUpdater
 
-from . import ui_utils
 from .update_window import UpdateWindow
 from .main_window import MainWindow
 
@@ -144,7 +145,7 @@ class TrayMenu(QMenu):
 class TrayIcon(QSystemTrayIcon):
 
     def __init__(self, updater: "Updater"):
-        super().__init__(QIcon(ui_utils.ICON_PATH))
+        super().__init__(QIcon(utils.PATH.ICON))
         self.updater = updater
         self.setContextMenu(TrayMenu(self.updater))
 

@@ -7,10 +7,11 @@ from PyQt5.QtCore import pyqtSlot as Slot
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QWidget
 
+import utils
+
 from lib.parsing import NEWS_DICT
 
 from . import ui_utils
-from . import app_config
 
 if not ui_utils.LOAD_UI:
     from .UI.UpdateWindow import Ui_UpdateWindow
@@ -33,7 +34,7 @@ class UpdateWindow(Ui_UpdateWindow, QWidget):
         self.__current: Optional[datetime.datetime] = None
         self.setupUi(self)
 
-        self.setWindowIcon(QIcon(app_config.ICON))
+        self.setWindowIcon(QIcon(utils.PATH.ICON))
         self.setAttribute(Qt.WA_QuitOnClose, False)
 
     @property

@@ -1,5 +1,4 @@
 from typing import *
-import os
 
 import logging
 import datetime
@@ -20,8 +19,6 @@ UI_CLASSES = ["ErrorDialog",
               "UserMenu"]
 
 _UI_UPDATED = FROZEN
-
-ICON = os.path.join(PATH.UI, "favicon.ico")
 
 
 def get_ui(cls: str, py=False):

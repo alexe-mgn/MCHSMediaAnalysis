@@ -14,3 +14,6 @@ class PATH:
     WRITE = EXECUTABLE
     LOAD = RELATIVE if LOAD_RELATIVE else (MEIPASS if LOAD_MEIPASS and FROZEN else EXECUTABLE)
     UI = os.path.join(LOAD, 'ui/UI')
+    ICON = os.path.join(UI, 'favicon.ico')
+    PLOT = os.path.join(LOAD, 'ui/plot.html')
+    PLOTLY_JS = os.path.join(LOAD, 'ui/plotly.min.js')
