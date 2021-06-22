@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>761</width>
-    <height>568</height>
+    <width>800</width>
+    <height>500</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -79,6 +79,35 @@
                </property>
                <property name="text">
                 <string>Refresh news</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="labelLimitNews">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>limit:</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QSpinBox" name="valueLimitNews">
+               <property name="toolTip">
+                <string>Limit fetched news. -1 for no limit.</string>
+               </property>
+               <property name="minimum">
+                <number>-1</number>
+               </property>
+               <property name="maximum">
+                <number>2147483647</number>
+               </property>
+               <property name="value">
+                <number>10000</number>
                </property>
               </widget>
              </item>
@@ -156,7 +185,7 @@
             </layout>
            </item>
            <item>
-            <spacer name="verticalSpacerTable">
+            <spacer name="verticalSpacerTables">
              <property name="orientation">
               <enum>Qt::Vertical</enum>
              </property>
@@ -190,6 +219,12 @@
             <horstretch>1</horstretch>
             <verstretch>0</verstretch>
            </sizepolicy>
+          </property>
+          <property name="tabsClosable">
+           <bool>true</bool>
+          </property>
+          <property name="movable">
+           <bool>true</bool>
           </property>
          </widget>
         </widget>
@@ -246,51 +281,61 @@
               <widget class="QComboBox" name="valuePlotType"/>
              </item>
              <item row="2" column="0">
-              <widget class="QLabel" name="labelPlotX">
+              <widget class="QLabel" name="labelPlot1">
                <property name="text">
-                <string>X</string>
+                <string>x</string>
                </property>
               </widget>
              </item>
              <item row="2" column="1">
-              <widget class="QComboBox" name="valuePlotX"/>
+              <widget class="QComboBox" name="valuePlot1"/>
              </item>
              <item row="3" column="0">
-              <widget class="QLabel" name="labelPlotY">
+              <widget class="QLabel" name="labelPlot2">
                <property name="text">
-                <string>Y</string>
+                <string>y</string>
                </property>
               </widget>
              </item>
              <item row="3" column="1">
-              <widget class="QComboBox" name="valuePlotY"/>
+              <widget class="QComboBox" name="valuePlot2"/>
              </item>
              <item row="4" column="0">
-              <widget class="QLabel" name="labelPlotColor">
+              <widget class="QLabel" name="labelPlot3">
                <property name="text">
                 <string>color</string>
                </property>
               </widget>
              </item>
              <item row="4" column="1">
-              <widget class="QComboBox" name="valuePlotColor"/>
+              <widget class="QComboBox" name="valuePlot3"/>
              </item>
-             <item row="5" column="0">
+             <item row="6" column="0">
               <widget class="QLabel" name="labelPlotName">
                <property name="text">
                 <string>Name (opt.)</string>
                </property>
               </widget>
              </item>
-             <item row="5" column="1">
+             <item row="6" column="1">
               <widget class="QLineEdit" name="valuePlotName"/>
              </item>
-             <item row="6" column="1">
+             <item row="7" column="1">
               <widget class="QToolButton" name="buttonPlot">
                <property name="text">
                 <string>Create plot</string>
                </property>
               </widget>
+             </item>
+             <item row="5" column="0">
+              <widget class="QLabel" name="labelPlot4">
+               <property name="text">
+                <string>size</string>
+               </property>
+              </widget>
+             </item>
+             <item row="5" column="1">
+              <widget class="QComboBox" name="valuePlot4"/>
              </item>
             </layout>
            </item>
@@ -329,7 +374,7 @@
            </item>
           </layout>
          </widget>
-         <widget class="QTabWidget" name="tabWidgetPlot">
+         <widget class="QTabWidget" name="tabWidgetPlots">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
             <horstretch>1</horstretch>
