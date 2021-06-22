@@ -6,6 +6,8 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QCloseEvent, QIcon
 from PyQt5.QtWidgets import QMainWindow, QTabBar
 
+import utils
+
 from . import ui_utils
 from . import app_config
 
@@ -33,7 +35,7 @@ class MainWindow(Ui_MainWindow, QMainWindow):
 
         self.setAttribute(Qt.WA_QuitOnClose, False)
         self.setWindowTitle(app_config.APP_NAME)
-        self.setWindowIcon(QIcon(ui_utils.ICON_PATH))
+        self.setWindowIcon(QIcon(utils.PATH.ICON))
 
         self.tabWidget.tabCloseRequested.connect(self.tabWidget.removeTab)
 
