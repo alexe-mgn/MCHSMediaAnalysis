@@ -27,8 +27,8 @@ class News(Base):
     }
 
     id = Column(Integer, primary_key=True)
-    title = Column(Text)
     date = Column(DateTime)
+    title = Column(Text)
     text = Column(Text)
     image = Column(Text)
     type_name = Column(String(25), ForeignKey("types.name"))
