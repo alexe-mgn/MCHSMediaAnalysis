@@ -18,7 +18,7 @@ UI_CLASSES = ["ErrorDialog",
               "AdminMenu", "SchemaMenu",
               "UserMenu"]
 
-_UI_UPDATED = FROZEN
+_UI_UPDATED = FROZEN or LOAD_UI
 
 
 def get_ui(cls: str, py=False):
@@ -35,12 +35,16 @@ def update_ui(cls: str):
         uic.compileUi(get_ui(cls, py=False), pyfile)
 
 
+def update_all_ui():
+    logging.debug("Updating all ui classes")
+    for cls in UI_CLASSES:
+        update_ui(cls)
+
+
 def update_all_ui_once():
     global _UI_UPDATED
     if not _UI_UPDATED:
-        logging.debug("Updating all ui classes")
-        for cls in UI_CLASSES:
-            update_ui(cls)
+        update_all_ui()
         _UI_UPDATED = True
 
 

@@ -19,8 +19,10 @@ if not ui_utils.LOAD_UI:
 else:
     Ui_SchemaMenu = ui_utils.load_ui("SchemaMenu")
 
+from .error_dialog import raise_exc_dialog
+
 if TYPE_CHECKING:
-    from .updater import UPDATE_RANGE, Updater
+    from .updater import Updater
 
 __all__ = ["SchemaMenu"]
 
@@ -155,5 +157,9 @@ class SchemaMenu(Ui_SchemaMenu, QGroupBox):
                 a = con.execute(func.max(db.News.date)).scalar()
         if a is not None:
             a = a.replace(tzinfo=MCHS_TZ)
-        self.updater.start_update(self.engine.url, b, a)
-        self.updater.open_status()
+        try:
+            self.updater.start_update(self.engine.url, b, a)
+        except RuntimeError:
+            raise_exc_dialog()
+        else:
+            self.updater.open_status()
