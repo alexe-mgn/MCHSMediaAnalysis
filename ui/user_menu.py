@@ -176,7 +176,7 @@ class UserMenu(Ui_UserMenu, QWidget):
         self.tabWidgetPlots.addTab(PlotView(figure), name if name is not None else "")
 
     def ui_create_table(self):
-        if not (name := self.valueTableName.currentText()):
+        if not (name := self.valueTableName.text()):
             raise ValueError(f"Table name can't be empty.")
         source = self._tables[self.valueTableSource.currentText()].table
         t_type = self.valueTableType.currentData()

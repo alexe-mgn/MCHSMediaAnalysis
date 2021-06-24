@@ -7,7 +7,7 @@ from sqlalchemy.engine import Engine, URL
 from sqlalchemy import create_engine, inspect, MetaData
 
 from PyQt5.QtCore import Qt, QSignalBlocker
-from PyQt5.QtWidgets import QGroupBox
+from PyQt5.QtWidgets import QGroupBox, QTableWidgetItem
 
 from lib import db
 from lib.date_utils import MCHS_TZ
@@ -22,7 +22,7 @@ else:
 from .error_dialog import raise_exc_dialog
 
 if TYPE_CHECKING:
-    from .updater import Updater
+    from .updater import UPDATE_RECORD, UPDATE_RANGE, Updater
 
 __all__ = ["SchemaMenu"]
 
@@ -32,7 +32,8 @@ class SchemaMenu(Ui_SchemaMenu, QGroupBox):
     def __init__(self, updater: "Updater", url: URL = None):
         super().__init__()
         self.updater = updater
-        self.engine: Engine = create_engine(url) if url else None
+        self._engine: Engine = create_engine(url) if url else None
+        self._schedule: List["UPDATE_RECORD"] = []
         self.setupUi(self)
         self.tabWidget.setCurrentIndex(0)
 
@@ -47,9 +48,7 @@ class SchemaMenu(Ui_SchemaMenu, QGroupBox):
         self.buttonCreateAllTables.clicked.connect(self.create_tables)
         self.buttonDeleteAllTables.clicked.connect(self.delete_tables)
 
-        self.schema = self.schema
-
-        # Update
+        # Update controls
         self.checkUpdateToLast.stateChanged.connect(lambda state: self.valueUpdateDateA.setEnabled(not state))
         self.valueUpdateDateA.dateTimeChanged.connect(
             lambda dt: self.valueUpdateDateB.setDateTime(max(self.valueUpdateDateB.dateTime(), dt)))
@@ -68,21 +67,42 @@ class SchemaMenu(Ui_SchemaMenu, QGroupBox):
         self.checkUpdateToLast.stateChanged.emit(self.checkUpdateToLast.checkState())
         self.checkUpdateFromAny.stateChanged.emit(self.checkUpdateFromAny.checkState())
 
-        self.buttonUpdate.clicked.connect(self.update_now)
+        self.buttonUpdate.clicked.connect(self.ui_update_now)
+
+        # Schedule
+        self.buttonScheduleDateNow.clicked.connect(
+            lambda: self.valueScheduleDate.setDateTime(
+                ui_utils.qdatetime_frompydatetime(datetime.datetime.now().astimezone())
+            ))
+
+        self.buttonRefreshSchedule.clicked.connect(self.refresh_schedule)
+        self.buttonSchedule.clicked.connect(self.ui_schedule_update)
+
+        self.tableSchedule.itemSelectionChanged.connect(
+            lambda: self.buttonScheduleCancel.setEnabled(bool(self.tableSchedule.selectedItems())))
+
+        self.buttonScheduleCancel.clicked.connect(self.ui_cancel_selected_updates)
+
+        self.valueScheduleDate.setDateTime(ui_utils.qdatetime_frompydatetime(
+            datetime.datetime.now().astimezone() + datetime.timedelta(hours=1)
+        ))
+
+        self.schema = self.schema
 
     @property
     def schema(self) -> str:
-        return self.engine.url.database if self.engine else None
+        return self._engine.url.database if self._engine else None
 
     @schema.setter
     def schema(self, name: Optional[str]):
         name = name if name else None
-        if self.engine:
-            self.engine = create_engine(self.engine.url._replace(database=name))
+        if self._engine:
+            self._engine = create_engine(self._engine.url._replace(database=name))
         elif name:
             raise RuntimeError("Cannot change schema without engine specified.")
 
         self.refresh_tables()
+        self.refresh_schedule()
         self.setTitle(name if name else "No schema")
         self.tabWidget.setEnabled(bool(name))
         self.buttonRefreshTables.setEnabled(bool(name))
@@ -113,17 +133,36 @@ class SchemaMenu(Ui_SchemaMenu, QGroupBox):
         b = QSignalBlocker(lt)
         lt.clear()
         if self.schema:
-            lt.addItems(inspect(self.engine).get_table_names(schema=self.schema))
+            lt.addItems(inspect(self._engine).get_table_names(schema=self.schema))
         del b
         self.selected_table = None
         self.buttonDeleteAllTables.setEnabled(self.listTables.count() > 0)
 
+    def refresh_schedule(self):
+        self._schedule.clear()
+        ts = self.tableSchedule
+        b = QSignalBlocker(ts)
+        ts.clear()
+        user = self._engine.url.username
+        schema = self.schema
+        updates = [upd for upd in self.updater.schedule if upd[3] == schema and upd[4] == user]
+        ts.setRowCount(len(updates))
+        ts.setHorizontalHeaderLabels(
+            [self.tr(e) for e in ("update time", "start", "end", "schema", "user")])
+        for y, upd in enumerate(updates):
+            self._schedule.append(upd)
+            for x, i in enumerate(upd):
+                item = QTableWidgetItem(str(i))
+                item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+                ts.setItem(y, x, item)
+        del b
+
     def create_tables(self):
-        db.Base.metadata.create_all(self.engine)
+        db.Base.metadata.create_all(self._engine)
         self.refresh_tables()
 
     def delete_tables(self):
-        db.Base.metadata.drop_all(self.engine)
+        db.Base.metadata.drop_all(self._engine)
         self.refresh_tables()
 
     def delete_table(self, name: str = None):
@@ -134,7 +173,7 @@ class SchemaMenu(Ui_SchemaMenu, QGroupBox):
         if not self.listTables.findItems(name, Qt.MatchExactly):
             raise KeyError(f"No table with name \"{name}\" found")
 
-        m = MetaData(self.engine)
+        m = MetaData(self._engine)
         m.reflect(only=(name,))
 
         if (t := m.tables.get(name, None)) is None:
@@ -143,23 +182,47 @@ class SchemaMenu(Ui_SchemaMenu, QGroupBox):
             t.drop()
         self.refresh_tables()
 
-    def get_update_range(self) -> Tuple[datetime.datetime, datetime.datetime]:
-        return (self.valueUpdateDateA.dateTime().toPyDateTime().replace(tzinfo=MCHS_TZ) if
+    def _get_ui_update_range(self) -> Tuple[datetime.datetime, datetime.datetime]:
+        return (self.valueUpdateDateA.dateTime().toPyDateTime().replace(second=0, tzinfo=MCHS_TZ) if
                 not self.checkUpdateToLast.checkState() else None,
-                self.valueUpdateDateB.dateTime().toPyDateTime().replace(tzinfo=MCHS_TZ) if
+                self.valueUpdateDateB.dateTime().toPyDateTime().replace(second=0, tzinfo=MCHS_TZ) if
                 not self.checkUpdateFromAny.checkState() else None)
 
-    def update_now(self):
-        a, b = self.get_update_range()
+    def ui_get_update_range(self) -> "UPDATE_RANGE":
+        a, b = self._get_ui_update_range()
         if a is None:
-            with self.engine.connect() as con:
+            with self._engine.connect() as con:
                 con: sqlalchemy.orm.Session
                 a = con.execute(func.max(db.News.date)).scalar()
         if a is not None:
             a = a.replace(tzinfo=MCHS_TZ)
+        return a, b
+
+    def ui_update_now(self):
         try:
-            self.updater.start_update(self.engine.url, b, a)
+            a, b = self.ui_get_update_range()
+            self.updater.start_update(self._engine.url, b, a)
         except RuntimeError:
             raise_exc_dialog()
         else:
             self.updater.open_status()
+
+    def ui_schedule_update(self):
+        try:
+            a, b = self.ui_get_update_range()
+            self.updater.schedule_update(
+                self._engine.url,
+                self.valueScheduleDate.dateTime().toPyDateTime().astimezone().replace(second=0),
+                b, a)
+        except RuntimeError:
+            raise_exc_dialog()
+        self.refresh_schedule()
+
+    def ui_cancel_selected_updates(self):
+        schedule = self._schedule
+        upds = {schedule[ind.row()] for ind in self.tableSchedule.selectedIndexes()}
+        updater = self.updater
+        for upd in upds:
+            if upd in updater.schedule:
+                updater.cancel_update(upd)
+        self.refresh_schedule()

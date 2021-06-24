@@ -1,24 +1,25 @@
 from typing import *
 import datetime
 
+import threading
 import asyncio
 
 import aiohttp
-from PyQt5.QtCore import QObject, QRunnable, QThreadPool
+from PyQt5.QtCore import Qt, QObject, QRunnable, QThreadPool, QTimer
 from PyQt5.QtCore import pyqtSignal as Signal
-from PyQt5.QtGui import QGuiApplication, QIcon
-from PyQt5.QtWidgets import QAction, QMenu, QSystemTrayIcon
 from sqlalchemy.engine import URL
 
 import utils
 
 from lib import MCHSUpdater
 
-from .update_window import UpdateWindow
+from . import app_config
+
+from .scheduler import ScheduleFileStore
+from .updater_ui import UpdateWindow, TrayIcon
 from .main_window import MainWindow
 
-
-__all__ = ["UPDATE_RANGE", "Updater"]
+__all__ = ["UPDATE_RECORD", "UPDATE_RANGE", "Updater"]
 
 
 class QtMCHSUpdater(MCHSUpdater, QObject):
@@ -80,6 +81,10 @@ class QtMCHSUpdater(MCHSUpdater, QObject):
 
 
 UPDATE_RANGE = Tuple[Optional[datetime.datetime], Optional[datetime.datetime]]
+# Update start time, lower date, upper date, schema, user
+UPDATE_RECORD = Tuple[datetime.datetime,
+                      Optional[datetime.datetime], Optional[datetime.datetime],
+                      str, str]
 
 
 class MCHSUpdate(QRunnable):
@@ -97,6 +102,10 @@ class MCHSUpdate(QRunnable):
         self._kwargs = kwargs
 
         self._news_updater: Optional[QtMCHSUpdater] = None
+
+    @property
+    def url(self) -> URL:
+        return self._url
 
     @property
     def range(self) -> UPDATE_RANGE:
@@ -123,45 +132,96 @@ class MCHSUpdate(QRunnable):
         self._news_updater.stop()
 
 
-class TrayMenu(QMenu):
-
-    def __init__(self, updater: "Updater"):
-        super().__init__()
-        self.updater = updater
-
-        self.actionShowStatus = QAction("Show update status")
-        self.actionShowStatus.triggered.connect(self.updater.open_status)
-        self.addAction(self.actionShowStatus)
-
-        self.actionShowMain = QAction("Open analysis")
-        self.actionShowMain.triggered.connect(self.updater.open_analysis)
-        self.addAction(self.actionShowMain)
-
-        self.actionExit = QAction("Exit")
-        self.actionExit.triggered.connect(self.updater.close)
-        self.addAction(self.actionExit)
-
-
-class TrayIcon(QSystemTrayIcon):
-
-    def __init__(self, updater: "Updater"):
-        super().__init__(QIcon(utils.PATH.ICON))
-        self.updater = updater
-        self.setContextMenu(TrayMenu(self.updater))
-
-        self.activated.connect(lambda r: self.updater.open_analysis() if r == QSystemTrayIcon.DoubleClick else ...)
-
-
 class Updater:
 
     def __init__(self):
-        self.app = QGuiApplication.instance()
+        self._urls: Dict[str, URL] = {}
+        self._unauthorized: Set[UPDATE_RECORD] = set()
+        self._warned: Set[UPDATE_RECORD] = set()
+
         self.tray_icon = TrayIcon(self)
+
+        self.schedule_store = ScheduleFileStore(utils.PATH.SCHEDULE)
+        self.schedule: List[UPDATE_RECORD] = self.schedule_store.refresh()
+
+        self._update_timer = QTimer()
+        self._update_timer.setTimerType(Qt.VeryCoarseTimer)
+        self._update_timer.setInterval(10 * 1000)
+        self._update_timer.timeout.connect(self.check_updates)
+
+        self._refresh_timer = QTimer()
+        self._refresh_timer.setTimerType(Qt.VeryCoarseTimer)
+        self._refresh_timer.setInterval(5 * 60 * 1000)
+        self._refresh_timer.timeout.connect(self.refresh_updates)
+
         self.update_window: Optional[UpdateWindow] = None
         self.update: Optional[MCHSUpdate] = None
         self.main_window: Optional[MainWindow] = None
 
         self.tray_icon.show()
+        self.check_updates()
+        self._update_timer.start()
+        self._refresh_timer.start()
+
+    def register_user(self, url: URL):
+        self._urls[url.username] = url
+        self.check_updates()
+
+    def warn_unauthorized_updates(self, force: bool = True):
+        warn = self._unauthorized if force else self._unauthorized - self._warned
+        if warn:
+            app = app_config.get_app()
+            self.tray_icon.showMessage(
+                app.tr("Could not start scheduled updates"),
+                app.tr("No users authorized to start:\n") + '\n'.join(map("{0[4]}:{0[3]} - {0[0]}".format, warn))
+            )
+            self._warned |= warn
+
+    def check_updates(self):
+        if self.update is None:
+            now = datetime.datetime.now(tz=datetime.timezone.utc)
+            app = app_config.get_app()
+            urls = self._urls
+            unauthorized = self._unauthorized
+
+            for n, upd in enumerate(sorted(self.schedule, key=lambda rec: rec[0])):
+                if now >= upd[0]:
+                    if (url := urls.get(upd[4], None)) is not None:
+                        self.start_update(url.set(database=upd[3]), end=upd[2], start=upd[1])
+                        self.tray_icon.showMessage(app.tr("Starting update"),
+                                                   self.update_string(upd))
+                        del self.schedule[n]
+                        self.schedule_store.dump(self.schedule)
+                        if upd in unauthorized:
+                            unauthorized.remove(upd)
+                            if upd in self._warned:
+                                self._warned.remove(upd)
+                        break
+                    else:
+                        unauthorized.add(upd)
+                else:
+                    break
+            self.warn_unauthorized_updates(force=False)
+
+    def refresh_updates(self):
+        self.schedule = self.schedule_store.refresh()
+
+    @staticmethod
+    def update_string(upd: UPDATE_RECORD):
+        return f"{upd[0]} {upd[3]}:{upd[4]} Update({upd[1]}-{upd[2]})"
+
+    def schedule_update(self, url: URL, /, dt: datetime.datetime,
+                        end: Optional[datetime.datetime] = None, start: Optional[datetime.datetime] = None):
+        self.schedule.append((dt, start, end, url.database, url.username))
+        self.schedule_store.dump(self.schedule)
+        self.register_user(url)
+
+    def cancel_update(self, upd: UPDATE_RECORD):
+        check = upd == self.schedule[0]
+        self.schedule.remove(upd)
+        self.schedule_store.dump(self.schedule)
+        if check:
+            self.check_updates()
 
     def start_update(self, url: URL, /,
                      end: Optional[datetime.datetime] = None, start: Optional[datetime.datetime] = None):
@@ -177,6 +237,11 @@ class Updater:
             QThreadPool.globalInstance().start(u)
 
     def _update_finished(self):
+        app = app_config.get_app()
+        upd = self.update
+        rng = upd.range
+        self.tray_icon.showMessage(app.tr("Update finished"),
+                                   f"{upd.url.database}:{upd.url.username} ({rng[0]}-{rng[1]})")
         del self.update
         self.update = None
 
@@ -185,7 +250,8 @@ class Updater:
             self.update_window.show()
             self.update_window.raise_()
         else:
-            self.tray_icon.showMessage("No updates", "There are no updates in progress.")
+            app = app_config.get_app()
+            self.tray_icon.showMessage(app.tr("No updates"), app.tr("There are no updates in progress."))
 
     def open_analysis(self):
         if self.main_window is None:
@@ -198,9 +264,7 @@ class Updater:
             mw: MainWindow
             mw.deleteLater()
         self.main_window = None
-        self.tray_icon.showMessage(
-            "Background task",
-            "MCHS Media updater utility is running in background mode to execute scheduled updates.")
 
-    def close(self):
-        self.app.exit(0)
+    @staticmethod
+    def close():
+        app_config.get_app().exit(0)

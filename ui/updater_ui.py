@@ -5,7 +5,7 @@ import datetime
 from PyQt5.QtCore import Qt
 from PyQt5.QtCore import pyqtSlot as Slot
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QWidget
+from PyQt5.QtWidgets import QWidget, QMenu, QAction, QSystemTrayIcon
 
 import utils
 
@@ -21,7 +21,36 @@ else:
 if TYPE_CHECKING:
     from .updater import UPDATE_RANGE, Updater
 
-__all__ = ["UpdateWindow"]
+__all__ = ["TrayIcon", "UpdateWindow"]
+
+
+class TrayMenu(QMenu):
+
+    def __init__(self, updater: "Updater"):
+        super().__init__()
+        self.updater = updater
+
+        self.actionShowStatus = QAction("Show update status")
+        self.actionShowStatus.triggered.connect(self.updater.open_status)
+        self.addAction(self.actionShowStatus)
+
+        self.actionShowMain = QAction("Open analysis")
+        self.actionShowMain.triggered.connect(self.updater.open_analysis)
+        self.addAction(self.actionShowMain)
+
+        self.actionExit = QAction("Exit")
+        self.actionExit.triggered.connect(self.updater.close)
+        self.addAction(self.actionExit)
+
+
+class TrayIcon(QSystemTrayIcon):
+
+    def __init__(self, updater: "Updater"):
+        super().__init__(QIcon(utils.PATH.ICON))
+        self.updater = updater
+        self.setContextMenu(TrayMenu(self.updater))
+
+        self.activated.connect(lambda r: self.updater.open_analysis() if r == QSystemTrayIcon.DoubleClick else ...)
 
 
 class UpdateWindow(Ui_UpdateWindow, QWidget):
