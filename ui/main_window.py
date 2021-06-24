@@ -48,6 +48,7 @@ class MainWindow(Ui_MainWindow, QMainWindow):
         tab_bar.setTabButton(connect_menu_index, QTabBar.RightSide, None)
 
     def connect(self, url: URL, role: str):
+        self.updater.register_user(url)
         if role == 'admin':
             tab = AdminMenu(self.updater, url)
         elif role == 'user':
@@ -59,4 +60,7 @@ class MainWindow(Ui_MainWindow, QMainWindow):
 
     def closeEvent(self, event: QCloseEvent):
         event.ignore()
+        self.updater.tray_icon.showMessage(
+            "Background task",
+            "MCHS Media updater utility is running in background mode to execute scheduled updates.")
         self.updater.close_analysis()

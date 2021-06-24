@@ -48,7 +48,7 @@ _l_water = [{"LEMMA": {"IN": ["пруд", "река", "озеро", "водоё�
 
 PATTERNS = {
     "city": [[*_l_city, *_l_name], [*_l_name, *_l_city], [{"TEXT": "г"}, {"TEXT": "."}, *_l_name]],
-    "region": [[*_l_reg, *_l_reg_name], [*_l_reg_name, *_l_reg]],
+    "region": [[*_l_reg_name, *_l_reg], [*_l_reg, *_l_reg_name]],
     "injuries": [
         [{"POS": "NUM"}, {"POS": "NOUN", "OP": "?"}, *_l_inj],
         [*_l_inj, {"POS": "NUM"}, {"POS": "NOUN", "OP": "?"}],
