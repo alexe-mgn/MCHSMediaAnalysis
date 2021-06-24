@@ -176,9 +176,9 @@ class UserMenu(Ui_UserMenu, QWidget):
         self.tabWidgetPlots.addTab(PlotView(figure), name if name is not None else "")
 
     def ui_create_table(self):
-        if not (source := self.valueTableSource.currentText()):
+        if not (name := self.valueTableName.currentText()):
             raise ValueError(f"Table name can't be empty.")
-        source = self._tables[source].table
+        source = self._tables[self.valueTableSource.currentText()].table
         t_type = self.valueTableType.currentData()
         rows = self.valueTableRows.currentData()
         cols = self.valueTableColumns.currentData()
@@ -188,7 +188,6 @@ class UserMenu(Ui_UserMenu, QWidget):
             table = pd.crosstab(source[rows], source[cols])
         else:
             raise ValueError(f"Invalid table type {t_type}.")
-        name = self.valueTableName.text()
         self.set_table(name, table)
         self.select_table(name)
 

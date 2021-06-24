@@ -20,6 +20,8 @@ class TableView(QTableWidget):
 
     def update_header(self):
         self.setHorizontalHeaderLabels([self.tr(str(col)) for col in self._table.columns])
+        if not pd.api.types.is_integer_dtype(self._table.index.dtype):
+            self.setVerticalHeaderLabels([self.tr(str(row)) for row in self._table.index])
 
     @property
     def table(self) -> Optional[pd.DataFrame]:
