@@ -15,7 +15,7 @@ from lib import MCHSUpdater
 
 from . import app_config
 
-from .scheduler import ScheduleFileStore
+from .schedule_store import ScheduleFileStore
 from .updater_ui import UpdateWindow, TrayIcon
 from .main_window import MainWindow
 
