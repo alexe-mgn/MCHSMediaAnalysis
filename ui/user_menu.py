@@ -1,5 +1,4 @@
 from typing import *
-import os
 import itertools as it
 
 from sqlalchemy.engine import URL
@@ -11,7 +10,8 @@ import plotly.offline
 import plotly.express
 import plotly
 
-from PyQt5.QtWidgets import QWidget, QLabel, QComboBox
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QWidget, QLabel, QComboBox, QFileDialog
 
 from lib import analysis
 
@@ -70,7 +70,8 @@ class UserMenu(Ui_UserMenu, QWidget):
 
         self.valueTableSource.currentTextChanged.emit(self.valueTableSource.currentText())
         self.tabWidgetTables.currentChanged.emit(self.tabWidgetTables.currentIndex())
-        # TODO export
+
+        self.buttonTableExport.clicked.connect(self.ui_export_table)
 
         # Plots
         for p_type in self.plot_arguments.keys():
@@ -85,6 +86,8 @@ class UserMenu(Ui_UserMenu, QWidget):
 
         self.valuePlotTable.currentTextChanged.emit(self.valuePlotTable.currentText())
         self.tabWidgetPlots.currentChanged.emit(self.tabWidgetPlots.currentIndex())
+
+        self.buttonPlotExport.clicked.connect(self.ui_export_plot)
 
     def _set_table_controls(self, name: Optional[str]):
         enabled = bool(name)
@@ -211,3 +214,22 @@ class UserMenu(Ui_UserMenu, QWidget):
             if getattr(self.tabWidgetPlots.widget(i), "figure", None) == fig:
                 self.tabWidgetPlots.setCurrentIndex(i)
                 break
+
+    def ui_export_table(self):
+        if w := self.tabWidgetTables.currentWidget():
+            if isinstance(w, TableView):
+                d = QFileDialog(caption=self.tr("Export table"), filter="CSV (*.csv)")
+                d.setAcceptMode(QFileDialog.AcceptSave)
+                d.setAttribute(Qt.WA_QuitOnClose, False)
+                if d.exec_():
+                    w.table.to_csv(d.selectedFiles()[0])
+
+    def ui_export_plot(self):
+        if w := self.tabWidgetPlots.currentWidget():
+            if isinstance(w, PlotView):
+                d = QFileDialog(caption=self.tr("Export plot"), filter="Image (*.png, *.jpg)")
+                d.setAcceptMode(QFileDialog.AcceptSave)
+                d.setAttribute(Qt.WA_QuitOnClose, False)
+                d.setDefaultSuffix("png")
+                if d.exec_():
+                    w.grab().save(d.selectedFiles()[0])
