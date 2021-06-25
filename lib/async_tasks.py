@@ -44,6 +44,7 @@ class TaskManager:
             super().__init__(self._coro_wrapper(coro), loop=self.manager.loop, name=name)
 
     def __init__(self, loop: asyncio.AbstractEventLoop = None):
+        self._stopping = False
         if loop is None:
             try:
                 self.loop = asyncio.get_event_loop()
@@ -56,14 +57,16 @@ class TaskManager:
             self.loop = loop
         AsyncTask = self.AsyncTask
         self._tasks: List[AsyncTask] = []
+        self._frozen_tasks: List[AsyncTask] = []
 
     def register_task(self, task: AsyncTask):
         """
         Register task in class manager.
         Should be called on every AsyncTask created, this way tasks are added to manager.
         """
-        task.add_done_callback(self._task_finished)
-        self._tasks.append(task)
+        if not self._stopping:
+            task.add_done_callback(self._task_finished)
+            self._tasks.append(task)
 
     def create_task(self, coro: Coroutine, /):
         """
@@ -98,8 +101,7 @@ class TaskManager:
         self.loop.run_until_complete(self.finish_all())
 
     def stop(self):
-        for task in self._tasks:
-            task.cancel()
+        self._stopping = True
 
     def task_started(self, task: AsyncTask, /):
         """
