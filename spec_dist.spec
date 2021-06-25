@@ -23,11 +23,11 @@ exe = EXE(pyz,
           [],
           exclude_binaries=True,
           name='main',
-          debug=True,
+          debug=False,
           bootloader_ignore_signals=False,
           strip=False,
           upx=True,
-          console=True, icon='ui\\UI\\favicon.ico' )
+          console=False, icon='ui\\UI\\favicon.ico' )
 coll = COLLECT(exe,
                a.binaries,
                a.zipfiles,
