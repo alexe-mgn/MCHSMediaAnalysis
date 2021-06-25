@@ -3,7 +3,6 @@ Utilities for processing site data.
 """
 from typing import *
 
-import itertools as it
 import asyncio
 
 import aiohttp
@@ -210,21 +209,3 @@ class MCHSUpdater(MCHSFetcher):
         self.update_while(test, test_page,
                           name=f"MCHS news range {key}[{lower};{upper}] update",
                           **kwargs)
-
-    # def update_ranges(self, keys: List[str],
-    #                  lower: List[Optional[Any]], upper: List[Optional[Any]],
-    #                  ascending: List[bool]):
-    #     n = len(keys)
-    #     opts = tuple(zip(keys,
-    #                      it.islice(it.chain(lower, it.cycle((None,))), n),
-    #                      it.islice(it.chain(upper, it.cycle((None,))), n),
-    #                      it.islice(it.chain(ascending, it.cycle((True,))), n)))
-    #
-    #     def test(news: Dict[str, Any]):
-    #         for key, low, up, asc in opts:
-    #             v = news.get(key, None)
-    #             if v is None or (low is not None and not low < v) or (up is not None and not v < up):
-    #                 return False
-    #         return True
-    #
-    #     def test_page(page: List[Dict[str, Any]]):
