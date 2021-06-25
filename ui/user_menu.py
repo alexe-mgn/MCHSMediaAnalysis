@@ -227,7 +227,7 @@ class UserMenu(Ui_UserMenu, QWidget):
     def ui_export_plot(self):
         if w := self.tabWidgetPlots.currentWidget():
             if isinstance(w, PlotView):
-                d = QFileDialog(caption=self.tr("Export plot"), filter="Image (*.png, *.jpg)")
+                d = QFileDialog(caption=self.tr("Export plot"), filter="Image (*.png *.jpg)")
                 d.setAcceptMode(QFileDialog.AcceptSave)
                 d.setAttribute(Qt.WA_QuitOnClose, False)
                 d.setDefaultSuffix("png")

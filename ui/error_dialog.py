@@ -1,5 +1,4 @@
 from typing import *
-import os
 import sys
 import traceback
 
@@ -8,7 +7,7 @@ from PyQt5.QtWidgets import QDialog
 
 from . import ui_utils
 
-if not ui_utils.LOAD_UI and os.path.isfile(ui_utils.get_ui("ErrorDialog", True)):
+if not ui_utils.LOAD_UI:
     from .UI.ErrorDialog import Ui_ErrorDialog
 else:
     Ui_ErrorDialog = ui_utils.load_ui("ErrorDialog")
