@@ -1,7 +1,6 @@
 from typing import *
 import os
 
-import spacy.lang.ru
 import spacy.cli
 import spacy.tokens
 import spacy.matcher
@@ -13,7 +12,6 @@ from . import proc_config
 
 __all__ = ["NLP", "MCHSTextProcessor"]
 
-# NLP = spacy.load("ru_core_news_sm")
 if os.path.isdir(utils.PATH.SPACY_MODEL):
     NLP = spacy.load(utils.PATH.SPACY_MODEL)
 else:
