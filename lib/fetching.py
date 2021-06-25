@@ -1,7 +1,6 @@
 """
 Classes for retrieving data from site.
 """
-import time
 import asyncio
 import urllib.parse
 
@@ -26,8 +25,6 @@ class MCHSFetcher(RequestManager):
         super().__init__(loop, session, max_requests)
         self.page_semaphore = asyncio.BoundedSemaphore(max_page_requests) if max_page_requests is not None else None
         self.news_semaphore = asyncio.BoundedSemaphore(max_news_requests) if max_news_requests is not None else None
-
-    # TaskClass = PageRequestTask
 
     class PageRequestTask(RequestManager.RequestTask):
         url_pattern = "news/{}/"
