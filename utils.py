@@ -17,5 +17,6 @@ class PATH:
     UI = os.path.join(LOAD, 'ui/UI')
     ICON = os.path.join(UI, 'favicon.ico')
     SCHEDULE = os.path.join(WRITE, 'schedule.txt')
+    SPACY_MODEL = os.path.join(LOAD, 'spacy_model')
     PLOT = os.path.join(LOAD, 'ui/plot.html')
     PLOTLY_JS = os.path.join(LOAD, 'ui/plotly.min.js')

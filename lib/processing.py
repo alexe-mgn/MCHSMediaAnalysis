@@ -1,14 +1,30 @@
 from typing import *
+import os
 
+import spacy.lang.ru
+import spacy.cli
 import spacy.tokens
 import spacy.matcher
 import spacy
+
+import utils
 
 from . import proc_config
 
 __all__ = ["NLP", "MCHSTextProcessor"]
 
-NLP = spacy.load("ru_core_news_sm")
+# NLP = spacy.load("ru_core_news_sm")
+if os.path.isdir(utils.PATH.SPACY_MODEL):
+    NLP = spacy.load(utils.PATH.SPACY_MODEL)
+else:
+    try:
+        import ru_core_news_sm
+
+        NLP = ru_core_news_sm.load()
+    except ImportError:
+        spacy.cli.download("ru_core_news_sm")
+        NLP = spacy.load("ru_core_news_sm")
+
 _pattern_matcher = spacy.matcher.Matcher(NLP.vocab)
 for key, ps in proc_config.PATTERNS.items():
     _pattern_matcher.add(key, ps)

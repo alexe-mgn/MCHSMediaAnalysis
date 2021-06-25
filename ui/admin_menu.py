@@ -131,7 +131,7 @@ class AdminMenu(Ui_AdminMenu, QWidget):
             self.setLayout(QVBoxLayout())
 
             fl = QFormLayout()
-            self.labelScheme = QLabel(self.tr("Scheme name"))
+            self.labelScheme = QLabel(self.tr("Schema name"))
             self.valueScheme = QLineEdit()
             fl.addRow(self.labelScheme, self.valueScheme)
             self.layout().addLayout(fl)

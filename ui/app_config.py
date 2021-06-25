@@ -31,3 +31,6 @@ if not os.path.isfile(utils.PATH.ICON):
 
 if not os.path.isfile(utils.PATH.PLOTLY_JS):
     logging.getLogger("UI").error(f"plotly.js is not found ({utils.PATH.PLOTLY_JS})")
+    import plotly.offline
+    with open(os.path.join(utils.PATH.PLOTLY_JS), mode='w') as f:
+        f.write(plotly.offline.get_plotlyjs())
