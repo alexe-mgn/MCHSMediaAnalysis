@@ -1,13 +1,15 @@
 from typing import *
 import datetime
 
+import csv
+
 from sqlalchemy.sql.expression import func
-import sqlalchemy.orm
 from sqlalchemy.engine import Engine, URL
+from sqlalchemy.orm import Session
 from sqlalchemy import create_engine, inspect, MetaData
 
 from PyQt5.QtCore import Qt, QSignalBlocker
-from PyQt5.QtWidgets import QGroupBox, QTableWidgetItem
+from PyQt5.QtWidgets import QGroupBox, QTableWidgetItem, QFileDialog
 
 from lib import db
 from lib.date_utils import MCHS_TZ
@@ -45,6 +47,8 @@ class SchemaMenu(Ui_SchemaMenu, QGroupBox):
             ))
         self.buttonRefreshTables.clicked.connect(self.refresh_tables)
         self.buttonDeleteTable.clicked.connect(lambda: self.delete_table())
+        self.buttonExportTable.clicked.connect(lambda: self.export_table())
+        self.buttonImportTable.clicked.connect(lambda: self.import_table())
         self.buttonCreateAllTables.clicked.connect(self.create_tables)
         self.buttonDeleteAllTables.clicked.connect(self.delete_tables)
 
@@ -165,13 +169,17 @@ class SchemaMenu(Ui_SchemaMenu, QGroupBox):
         db.Base.metadata.drop_all(self._engine)
         self.refresh_tables()
 
-    def delete_table(self, name: str = None):
+    def _check_table(self, name: str = None):
         if name is None:
             name = self.selected_table
         if name is None:
             raise RuntimeError("Table name should be either provided as argument or selected in table list.")
         if not self.listTables.findItems(name, Qt.MatchExactly):
             raise KeyError(f"No table with name \"{name}\" found")
+        return name
+
+    def delete_table(self, name: str = None):
+        name = self._check_table(name)
 
         m = MetaData(self._engine)
         m.reflect(only=(name,))
@@ -181,6 +189,44 @@ class SchemaMenu(Ui_SchemaMenu, QGroupBox):
         else:
             t.drop()
         self.refresh_tables()
+
+    def export_table(self, name: str = None):
+        name = self._check_table(name)
+        d = QFileDialog(caption=self.tr("Export table"), filter="CSV (*.csv)")
+        d.setAcceptMode(QFileDialog.AcceptSave)
+        d.setAttribute(Qt.WA_QuitOnClose, False)
+        if d.exec_():
+            with open(d.selectedFiles()[0], mode='w', newline='') as file:
+                writer = csv.writer(file)
+                m = MetaData(self._engine)
+                m.reflect(only=(name,))
+                if (t := m.tables.get(name, None)) is None:
+                    raise KeyError(f"No table with name \"{name}\" found")
+                else:
+                    with Session(self._engine) as s:
+                        cols = t.columns
+                        for row in s.query(t).all():
+                            writer.writerow(row[col.name] for col in cols)
+
+    def import_table(self, name: str = None):
+        name = self._check_table(name)
+        d = QFileDialog(caption=self.tr("Import table"), filter="CSV (*.csv)")
+        d.setAcceptMode(QFileDialog.AcceptOpen)
+        d.setFileMode(QFileDialog.ExistingFile)
+        d.setAttribute(Qt.WA_QuitOnClose, False)
+        if d.exec_():
+            with open(d.selectedFiles()[0], mode='r') as file:
+                reader = csv.reader(file)
+                m = MetaData(self._engine)
+                m.reflect(only=(name,))
+                if (t := m.tables.get(name, None)) is None:
+                    raise KeyError(f"No table with name \"{name}\" found")
+                else:
+                    with Session(self._engine) as s, s.begin():
+                        cols = t.columns
+                        s.execute(t.delete())
+                        for row in reader:
+                            s.execute(t.insert(values={k.name: v for k, v in zip(cols, row)}))
 
     def _get_ui_update_range(self) -> Tuple[datetime.datetime, datetime.datetime]:
         return (self.valueUpdateDateA.dateTime().toPyDateTime().replace(second=0, tzinfo=MCHS_TZ) if
@@ -192,7 +238,6 @@ class SchemaMenu(Ui_SchemaMenu, QGroupBox):
         a, b = self._get_ui_update_range()
         if a is None:
             with self._engine.connect() as con:
-                con: sqlalchemy.orm.Session
                 a = con.execute(func.max(db.News.date)).scalar()
         if a is not None:
             a = a.replace(tzinfo=MCHS_TZ)
